@@ -47,6 +47,34 @@ For example, the following code will find the url `linkedin.com`
     }
 ```
 
+### URL normalization and domain name conversion into its ASCII form for DNS lookup (including emojis)
+There are three main standards for converting [internationalized domain names (IDNA)](
+https://en.wikipedia.org/wiki/Internationalized_domain_name) into their ASCII forms:
+IDNA 2003, IDNA2008, and [UTS #46](http://www.unicode.org/reports/tr46/).
+
+As of May 2020, major web browsers employ UTS #46. This is a sort of more lenient,
+tradeoff standard between IDNA2003 and IDNA2008, that tries to accommodate both IDNA versions.
+However, this is not completely possible 
+(see [comparison table](http://www.unicode.org/reports/tr46/#Table_IDNA_Comparisons)).
+For this reason, the UTS #46 algorithm has several 
+[processing flags](http://www.unicode.org/reports/tr46/#Processing). 
+
+Example:
+```java
+    Url url = Url.create("https://i❤.ws/");
+    System.out.println("Normalized URL: " + url.normalize());
+```
+
+Optionally, UTS #46 Ascii [normalization options](
+(https://unicode-org.github.io/icu-docs/apidoc/released/icu4j/com/ibm/icu/text/IDNA.html#getUTS46Instance-int-))
+can be set. By default, we use `IDNA.NONTRANSITIONAL_TO_ASCII`.
+
+```java
+    import com.ibm.icu.text.IDNA;
+    HostNormalizer.setUts46Options(IDNA.NONTRANSITIONAL_TO_ASCII);
+```
+
+
 ### Quote Matching and HTML
 Depending on your input string, you may want to handle certain characters in a special way. For example if you are
 parsing HTML, you probably want to break out of things like quotes and brackets. For example, if your input looks like
@@ -78,6 +106,19 @@ To use the latest release, add the following dependency to your pom.xml:
     </dependency>
 ```
 
+The icu4j library is optional, given its size. Add it in you pom.xml as follows.
+
+```xml
+    <dependency>
+        <groupId>com.ibm.icu</groupId>
+        <artifactId>icu4j</artifactId>
+        <version>67.1</version>
+    </dependency>
+```
+
+If icu4j is not loaded, we fall back to `java.net.IDN.toASCII(host, IDN.ALLOW_UNASSIGNED)`,
+which only supports IDNA2003.
+
 ---
 ## About:
 
@@ -99,6 +140,11 @@ This library was written by the security team and Linkedin when other options di
 * http://commons.apache.org/proper/commons-lang/
 * Copyright © 2001-2014 The Apache Software Foundation
 * License: Apache 2.0
+
+### Optional, Unicode Icu4j: com.ibm.icu:icu4j:67.1
+* http://site.icu-project.org/home
+* Copyright © 1991-2020 Unicode, Inc. All rights reserved.
+* License: http://www.unicode.org/copyright.html#License
 
 ---
 ## License
