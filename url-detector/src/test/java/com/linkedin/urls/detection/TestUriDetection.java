@@ -726,6 +726,16 @@ public class TestUriDetection {
       );
   }
 
+  @Test
+  public void testNullTextUrlDetector() {
+    runTest(null, UrlDetectorOptions.Default);
+  }
+
+  @Test(expectedExceptions = MalformedURLException.class)
+  public void testNullTextUrlCreate() throws MalformedURLException {
+    Url.create(null);
+  }
+
   @DataProvider
   private Object[][] getUrlsForSchemaDetectionInHtml() {
     String domain = "linkedin.com";

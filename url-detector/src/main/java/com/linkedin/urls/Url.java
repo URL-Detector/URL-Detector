@@ -61,7 +61,8 @@ public class Url {
    * Returns a url given a single url.
    */
   public static Url create(String url) throws MalformedURLException {
-    String formattedString = UrlUtil.removeSpecialSpaces(url.trim().replace(" ", "%20"));
+    String safeUrl = url == null ? "" : url;
+    String formattedString = UrlUtil.removeSpecialSpaces(safeUrl.trim().replace(" ", "%20"));
     List<Url> urls = new UrlDetector(formattedString, UrlDetectorOptions.ALLOW_SINGLE_LEVEL_DOMAIN).detect();
     if (urls.size() == 1) {
       return urls.get(0);
