@@ -79,6 +79,15 @@ public class Url {
     return new NormalizedUrl(_urlMarker);
   }
 
+  /**
+   * True if the url has a valid top level domain (or is an ip address).
+   */
+  public boolean hasValidTopLevelDomain() {
+    List<Url> urls =
+      new UrlDetector(getHost(), UrlDetectorOptions.VALIDATE_TOP_LEVEL_DOMAIN).detect();
+    return !urls.isEmpty();
+  }
+
   @Override
   public String toString() {
     return this.getFullUrl();

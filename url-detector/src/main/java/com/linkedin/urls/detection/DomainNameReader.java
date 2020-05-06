@@ -9,6 +9,12 @@
  */
 package com.linkedin.urls.detection;
 
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Scanner;
+import java.util.Set;
+
 /**
  * The domain name reader reads input from a InputTextReader and validates if the content being read is a valid domain name.
  * After a domain name is read, the returning status is what to do next. If the domain is valid but a specific character is found,
@@ -74,6 +80,28 @@ public class DomainNameReader {
    * Encoded hex dot.
    */
   private static final String HEX_ENCODED_DOT = "2e";
+
+  private static Collection<String> _validTopLevelDomains = null;
+
+  private static Collection<String> getValidTopLevelDomainsFromIANA() throws IOException {
+    Set<String> topLevelDomains = new HashSet<>();
+    String url = "https://data.iana.org/TLD/tlds-alpha-by-domain.txt";
+    Scanner scanner = new Scanner(new java.net.URL(url).openStream(), "UTF-8")
+      .useDelimiter("\n");
+    scanner.next(); // first line is a comment
+    while(scanner.hasNext()) topLevelDomains.add(scanner.next().toLowerCase());
+    return topLevelDomains;
+  }
+
+  /**
+   * Refresh the list of IANA top level domains. Available because they change quite often.
+   * Thread safe for multiple readers.
+   */
+  public static void refreshTopLevelDomainsFromIANA() throws IOException {
+    _validTopLevelDomains = getValidTopLevelDomainsFromIANA();
+  }
+
+  protected static boolean validTopLevelDomainsAreSet() { return _validTopLevelDomains != null; }
 
   /**
    * This is the final return state of reading a domain name.
@@ -498,7 +526,12 @@ public class DomainNameReader {
 
       //There is no size restriction if the top level domain is international (starts with "xn--")
       valid =
-          ((topLevelStart.equalsIgnoreCase("xn--") || (_topLevelLength >= MIN_TOP_LEVEL_DOMAIN && _topLevelLength <= MAX_TOP_LEVEL_DOMAIN)));
+          ((!topLevelStart.equalsIgnoreCase("xn--") &&
+            (_topLevelLength < MIN_TOP_LEVEL_DOMAIN || _topLevelLength > MAX_TOP_LEVEL_DOMAIN)) ||
+            !_options.hasFlag(UrlDetectorOptions.VALIDATE_TOP_LEVEL_DOMAIN) ||
+            _validTopLevelDomains.contains(
+              // full top level domain
+              _buffer.substring(topStart, topStart + _buffer.length() - topStart).toLowerCase()));
     }
 
     if (valid) {

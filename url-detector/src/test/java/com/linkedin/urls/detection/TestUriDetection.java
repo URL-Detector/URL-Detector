@@ -11,6 +11,7 @@ package com.linkedin.urls.detection;
 
 import com.linkedin.urls.Url;
 
+import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
@@ -697,7 +698,17 @@ public class TestUriDetection {
     // kills loop in UrlDetector.readDefault()  
     runTest(" :u ", UrlDetectorOptions.ALLOW_SINGLE_LEVEL_DOMAIN);
   }
-  
+
+  @Test
+  public void validTld() throws MalformedURLException {
+    runTest("hello.nonExistingTLD", UrlDetectorOptions.VALIDATE_TOP_LEVEL_DOMAIN);
+    runTest("hello.com", UrlDetectorOptions.VALIDATE_TOP_LEVEL_DOMAIN, "hello.com");
+    runTest("http://192.168.1.1", UrlDetectorOptions.VALIDATE_TOP_LEVEL_DOMAIN, "http://192.168.1.1");
+    Assert.assertFalse(Url.create("hello.nonExistingTLD").hasValidTopLevelDomain());
+    Assert.assertTrue(Url.create("hello.barcelona").hasValidTopLevelDomain());
+    Assert.assertTrue(Url.create("http://192.168.1.1").hasValidTopLevelDomain());
+  }
+
   @DataProvider
   private Object[][] getUrlsForSchemaDetectionInHtml() {
     String domain = "linkedin.com";
