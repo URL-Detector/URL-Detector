@@ -712,6 +712,20 @@ public class TestUriDetection {
     Assert.assertTrue(Url.create("http://192.168.1.1").hasValidTopLevelDomain());
   }
 
+  @Test
+  public void optionComposition() {
+    runTest(
+      "<script type=\"text/javascript\">var a = 'http://www.abc.nonExistingTLD', b=\"www.def.com\"</script><a href=\"http://www.google.com\">google.com</a>",
+      UrlDetectorOptions.compose(UrlDetectorOptions.HTML, UrlDetectorOptions.VALIDATE_TOP_LEVEL_DOMAIN),
+      "http://www.google.com", "www.def.com", "google.com");
+
+    runTest(
+      "http://localhost hello.nonExistingTLD",
+      UrlDetectorOptions.compose(UrlDetectorOptions.ALLOW_SINGLE_LEVEL_DOMAIN, UrlDetectorOptions.VALIDATE_TOP_LEVEL_DOMAIN),
+      "http://localhost"
+      );
+  }
+
   @DataProvider
   private Object[][] getUrlsForSchemaDetectionInHtml() {
     String domain = "linkedin.com";

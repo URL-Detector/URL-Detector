@@ -12,72 +12,97 @@ package com.linkedin.urls.detection;
 /**
  * The options to use when detecting urls. This enum is used as a bit mask to be able to set multiple options at once.
  */
-public enum UrlDetectorOptions {
+public class UrlDetectorOptions {
+
   /**
    * Default options, no special checks.
    */
-  Default(0),
+  public static UrlDetectorOptions Default = new UrlDetectorOptions(0);
 
   /**
    * Matches quotes in the beginning and end of string.
    * If a string starts with a quote, then the ending quote will be eliminated. For example,
    * "http://linkedin.com" will pull out just 'http://linkedin.com' instead of 'http://linkedin.com"'
    */
-  QUOTE_MATCH(1), // 00000001
+  public static UrlDetectorOptions QUOTE_MATCH = new UrlDetectorOptions(1); // 00000001
 
   /**
    * Matches single quotes in the beginning and end of a string.
    */
-  SINGLE_QUOTE_MATCH(2), // 00000010
+  public static UrlDetectorOptions SINGLE_QUOTE_MATCH = new UrlDetectorOptions(2); // 00000010
 
   /**
    * Matches brackets and closes on the second one.
    * Same as quote matching but works for brackets such as (), {}, [].
    */
-  BRACKET_MATCH(4), // 000000100
+  public static UrlDetectorOptions BRACKET_MATCH = new UrlDetectorOptions(4); // 000000100
 
   /**
    * Checks for bracket characters and more importantly quotes to start and end strings.
    */
-  JSON(5), //00000101
+  public static UrlDetectorOptions JSON = new UrlDetectorOptions(5); //00000101
 
   /**
    * Checks JSON format or but also looks for a single quote.
    */
-  JAVASCRIPT(7), //00000111
+  public static UrlDetectorOptions JAVASCRIPT = new UrlDetectorOptions(7); //00000111
 
   /**
    * Checks for xml characters and uses them as ending characters as well as quotes.
    * This also includes quote_matching.
    */
-  XML(9), //00001001
+  public static UrlDetectorOptions XML = new UrlDetectorOptions(9); //00001001
 
   /**
    * Checks all of the rules besides brackets. This is XML but also can contain javascript.
    */
-  HTML(27), //00011011
+  public static UrlDetectorOptions HTML = new UrlDetectorOptions(27); //00011011
 
   /**
    * Checks for single level domains as well. Ex: go/, http://localhost
    */
-  ALLOW_SINGLE_LEVEL_DOMAIN(32), //00100000
+  public static UrlDetectorOptions ALLOW_SINGLE_LEVEL_DOMAIN = new UrlDetectorOptions(32); //00100000
 
   /**
    * Validates top level domains against IANA list
    * https://data.iana.org/TLD/tlds-alpha-by-domain.txt
    */
-  VALIDATE_TOP_LEVEL_DOMAIN(64); //01000000
+  public static UrlDetectorOptions VALIDATE_TOP_LEVEL_DOMAIN = new UrlDetectorOptions(64); //01000000
 
+  /**
+   * Compose two or more options, e.g. HTML and VALIDATE_TOP_LEVEL_DOMAIN.
+   * ALLOW_SINGLE_LEVEL_DOMAIN can only be mixed with VALIDATE_TOP_LEVEL_DOMAIN.
+   * @param options Two or more UrlDetectorOptions
+   * @return A new UrlDetectorOptions as the bitwise or of the options.
+   */
+  public static UrlDetectorOptions compose(UrlDetectorOptions... options) {
+    int composition = 0;
+    boolean formattingOptionPresent = false;
+    boolean allowSingleLevelDomainOptionPresent = false;
+
+    for (UrlDetectorOptions value : options) {
+      int option = value.getValue();
+
+      if (option < ALLOW_SINGLE_LEVEL_DOMAIN.getValue()) formattingOptionPresent = true;
+      if (option == ALLOW_SINGLE_LEVEL_DOMAIN.getValue()) allowSingleLevelDomainOptionPresent = true;
+      if (formattingOptionPresent && allowSingleLevelDomainOptionPresent)
+        throw new IllegalArgumentException(
+          "ALLOW_SINGLE_LEVEL_DOMAIN cannot be mixed with formatting options (e.g. HTML)");
+
+      composition |= option;
+    };
+    return new UrlDetectorOptions(composition);
+  }
   /**
    * The numeric value.
    */
-  private int _value;
+  private final int _value;
 
   /**
    * Creates a new Options enum
    * @param value The numeric value of the enum
    */
-  UrlDetectorOptions(int value) {
+  private UrlDetectorOptions(int value) {
     this._value = value;
   }
 
