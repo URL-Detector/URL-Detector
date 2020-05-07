@@ -704,6 +704,9 @@ public class TestUriDetection {
     runTest("hello.nonExistingTLD", UrlDetectorOptions.VALIDATE_TOP_LEVEL_DOMAIN);
     runTest("hello.com", UrlDetectorOptions.VALIDATE_TOP_LEVEL_DOMAIN, "hello.com");
     runTest("http://192.168.1.1", UrlDetectorOptions.VALIDATE_TOP_LEVEL_DOMAIN, "http://192.168.1.1");
+    runTest("hello.o", UrlDetectorOptions.VALIDATE_TOP_LEVEL_DOMAIN);
+    runTest("hello.o", UrlDetectorOptions.Default);
+    runTest("http://localhost", UrlDetectorOptions.ALLOW_SINGLE_LEVEL_DOMAIN, "http://localhost");
     Assert.assertFalse(Url.create("hello.nonExistingTLD").hasValidTopLevelDomain());
     Assert.assertTrue(Url.create("hello.barcelona").hasValidTopLevelDomain());
     Assert.assertTrue(Url.create("http://192.168.1.1").hasValidTopLevelDomain());

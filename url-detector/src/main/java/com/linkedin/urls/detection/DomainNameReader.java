@@ -525,13 +525,14 @@ public class DomainNameReader {
       String topLevelStart = _buffer.substring(topStart, topStart + Math.min(4, _buffer.length() - topStart));
 
       //There is no size restriction if the top level domain is international (starts with "xn--")
-      valid =
-          ((!topLevelStart.equalsIgnoreCase("xn--") &&
-            (_topLevelLength < MIN_TOP_LEVEL_DOMAIN || _topLevelLength > MAX_TOP_LEVEL_DOMAIN)) ||
-            !_options.hasFlag(UrlDetectorOptions.VALIDATE_TOP_LEVEL_DOMAIN) ||
-            _validTopLevelDomains.contains(
-              // full top level domain
-              _buffer.substring(topStart, topStart + _buffer.length() - topStart).toLowerCase()));
+      boolean sizeRestrictionCheck = topLevelStart.equalsIgnoreCase("xn--")
+        || (_topLevelLength >= MIN_TOP_LEVEL_DOMAIN && _topLevelLength <= MAX_TOP_LEVEL_DOMAIN);
+
+      boolean singleLevelCheck = (_options.hasFlag(UrlDetectorOptions.ALLOW_SINGLE_LEVEL_DOMAIN) && _dots == 0);
+      boolean validTopLevelCheck = !_options.hasFlag(UrlDetectorOptions.VALIDATE_TOP_LEVEL_DOMAIN)
+        || _validTopLevelDomains.contains(_buffer.substring(topStart, topStart + _buffer.length() - topStart).toLowerCase());
+
+      valid = sizeRestrictionCheck && (singleLevelCheck || validTopLevelCheck);
     }
 
     if (valid) {
