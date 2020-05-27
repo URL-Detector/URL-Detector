@@ -11,6 +11,7 @@ package com.linkedin.urls.detection;
 
 import com.linkedin.urls.Url;
 
+import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
@@ -714,7 +715,44 @@ public class TestUriDetection {
     // kills loop in UrlDetector.readDefault()  
     runTest(" :u ", UrlDetectorOptions.ALLOW_SINGLE_LEVEL_DOMAIN);
   }
-  
+
+  @Test
+  public void validTld() throws MalformedURLException {
+    runTest("hello.nonExistingTLD", UrlDetectorOptions.VALIDATE_TOP_LEVEL_DOMAIN);
+    runTest("hello.com", UrlDetectorOptions.VALIDATE_TOP_LEVEL_DOMAIN, "hello.com");
+    runTest("http://192.168.1.1", UrlDetectorOptions.VALIDATE_TOP_LEVEL_DOMAIN, "http://192.168.1.1");
+    runTest("hello.o", UrlDetectorOptions.VALIDATE_TOP_LEVEL_DOMAIN);
+    runTest("hello.o", UrlDetectorOptions.Default);
+    runTest("http://localhost", UrlDetectorOptions.ALLOW_SINGLE_LEVEL_DOMAIN, "http://localhost");
+    Assert.assertFalse(Url.create("hello.nonExistingTLD").hasValidTopLevelDomain());
+    Assert.assertTrue(Url.create("hello.barcelona").hasValidTopLevelDomain());
+    Assert.assertTrue(Url.create("http://192.168.1.1").hasValidTopLevelDomain());
+  }
+
+  @Test
+  public void optionComposition() {
+    runTest(
+      "<script type=\"text/javascript\">var a = 'http://www.abc.nonExistingTLD', b=\"www.def.com\"</script><a href=\"http://www.google.com\">google.com</a>",
+      UrlDetectorOptions.compose(UrlDetectorOptions.HTML, UrlDetectorOptions.VALIDATE_TOP_LEVEL_DOMAIN),
+      "http://www.google.com", "www.def.com", "google.com");
+
+    runTest(
+      "http://localhost hello.nonExistingTLD",
+      UrlDetectorOptions.compose(UrlDetectorOptions.ALLOW_SINGLE_LEVEL_DOMAIN, UrlDetectorOptions.VALIDATE_TOP_LEVEL_DOMAIN),
+      "http://localhost"
+      );
+  }
+
+  @Test
+  public void testNullTextUrlDetector() {
+    runTest(null, UrlDetectorOptions.Default);
+  }
+
+  @Test(expectedExceptions = MalformedURLException.class)
+  public void testNullTextUrlCreate() throws MalformedURLException {
+    Url.create(null);
+  }
+
   @DataProvider
   private Object[][] getUrlsForSchemaDetectionInHtml() {
     String domain = "linkedin.com";

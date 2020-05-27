@@ -29,7 +29,7 @@ public class InputTextReader {
    * @param content The content to read.
    */
   public InputTextReader(String content) {
-    _content = content.toCharArray();
+    _content = content == null ? new char[0] : content.toCharArray();
   }
 
   /**
