@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
-
+import com.ibm.icu.text.IDNA;
 
 /**
  * Normalizes the host by converting hex characters to the actual textual representation, changes ip addresses
@@ -31,6 +31,53 @@ public class HostNormalizer {
   private static final int MAX_IPV6_PART = 0xFFFF;
   private static final int IPV4_MAPPED_IPV6_START_OFFSET = 12;
   private static final int NUMBER_BYTES_IN_IPV4 = 4;
+
+  private static boolean icu4jAvailable = isIcu4jAvailable();
+  private static IDNA _uts46 = null;
+  private static int _uts46Options = setUTS46DefaultOptions();
+
+  private static boolean isIcu4jAvailable() {
+    try {
+      Class.forName("com.ibm.icu.text.IDNA");
+      return true;
+    } catch (ClassNotFoundException ex) {
+      System.err.println("icu4j library JAR not found. Using fallback java.net.IDN.");
+      return false;
+    }
+  }
+
+  private static int setUTS46DefaultOptions() {
+    return icu4jAvailable ? IDNA.NONTRANSITIONAL_TO_ASCII : 0;
+  }
+
+  private static IDNA getIcu4jUTS46Instance(int options) {
+    return IDNA.getUTS46Instance(options);
+  }
+
+  /**
+   * Sets the options of the IDNA instance which implements UTS #46.
+   * For available options, see
+   * https://unicode-org.github.io/icu-docs/apidoc/released/icu4j/com/ibm/icu/text/IDNA.html#getUTS46Instance-int-
+   *
+   * @param options Bit set to modify the processing and error checking.
+   * @return true if icu4j is available, false otherwise.
+   */
+  public static boolean setUts46Options(int options) {
+    icu4jAvailable = isIcu4jAvailable();
+    if (icu4jAvailable) {
+      _uts46Options = options;
+      _uts46 = getIcu4jUTS46Instance(options);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * The uts46 instance is cached for multiple operations, it can be deleted when done.
+   */
+  public static void deleteUTS46Instance() {
+    _uts46 = null;
+  }
 
   private byte[] _bytes;
   private String _host;
@@ -51,7 +98,12 @@ public class HostNormalizer {
     String host;
     try {
       //replace high unicode characters
-      host = IDN.toASCII(_host, IDN.ALLOW_UNASSIGNED);
+      if (icu4jAvailable) {
+        if (_uts46 == null) _uts46 = getIcu4jUTS46Instance(_uts46Options);
+        host = _uts46.nameToASCII(_host, new StringBuilder(), new IDNA.Info()).toString();
+      } else {
+        host = IDN.toASCII(_host, IDN.ALLOW_UNASSIGNED);
+      }
     } catch (IllegalArgumentException ex) {
       //occurs when the url is invalid. Just return
       return;
