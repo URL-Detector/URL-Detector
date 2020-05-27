@@ -82,7 +82,8 @@ public class TestHostNormalizer {
     return new Object[][] {
       {"☀♁♧.com", "xn--k3h6hoe.com"},
       {"🐩🤠🖊🍩🏳🐯🕶🐋.🍕💩.ws", "xn--gj8huimcrf6a45n5dx91a.xn--vi8hiv.ws"},
-      {"goȪgle.ga", "xn--gogle-jdc.ga"}
+      {"goȪgle.ga", "xn--gogle-jdc.ga"},
+      {"www.rößner.de", "www.xn--rner-vna1l.de"}
     };
   }
 

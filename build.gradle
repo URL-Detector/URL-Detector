@@ -20,6 +20,8 @@ subprojects {
     dependencies {
       testCompile spec.external.testng
       compile spec.external.'commonsLang'
+      compileOnly spec.external.'icu4j'
+      testCompileOnly spec.external.'icu4j'
     }
 
     test {

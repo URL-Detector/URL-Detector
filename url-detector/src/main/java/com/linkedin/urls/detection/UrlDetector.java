@@ -12,6 +12,8 @@ package com.linkedin.urls.detection;
 import com.linkedin.urls.Url;
 import com.linkedin.urls.UrlMarker;
 import com.linkedin.urls.UrlPart;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -123,6 +125,14 @@ public class UrlDetector {
   public UrlDetector(String content, UrlDetectorOptions options) {
     _reader = new InputTextReader(content);
     _options = options;
+    if (_options.hasFlag(UrlDetectorOptions.VALIDATE_TOP_LEVEL_DOMAIN) &&
+      ! DomainNameReader.validTopLevelDomainsAreSet()) {
+      try {
+        DomainNameReader.refreshTopLevelDomainsFromIANA();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
   }
 
   /**

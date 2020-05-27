@@ -60,7 +60,13 @@ public enum UrlDetectorOptions {
   /**
    * Checks for single level domains as well. Ex: go/, http://localhost
    */
-  ALLOW_SINGLE_LEVEL_DOMAIN(32); //00100000
+  ALLOW_SINGLE_LEVEL_DOMAIN(32), //00100000
+
+  /**
+   * Validates top level domains against IANA list
+   * https://data.iana.org/TLD/tlds-alpha-by-domain.txt
+   */
+  VALIDATE_TOP_LEVEL_DOMAIN(64); //01000000
 
   /**
    * The numeric value.
