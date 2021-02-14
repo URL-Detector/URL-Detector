@@ -458,14 +458,19 @@ public class UrlDetector {
       if (curr == '/') {
         _buffer.append(curr);
         if (numSlashes == 1) {
-          //return only if its an approved protocol. This can be expanded to allow others
-          int schemeStartIndex = findValidSchemeStartIndex(_buffer.toString());
+          int schemeStartIndex = 0;
+          if (!_options.hasFlag(UrlDetectorOptions.ALLOW_ANY_SCHEME)) {
+            // Return only if its an approved protocol (or has an approved protocol as the suffix).
+            schemeStartIndex = findValidSchemeStartIndex(_buffer.toString());
+          }
           if (schemeStartIndex >= 0) {
             _buffer.delete(0, schemeStartIndex);
             _currentUrlMarker.setIndex(UrlPart.SCHEME, 0);
             return true;
           } else {
-            return false;
+            // TODO how do i consume the rest of this invalid url to ensure it doesn't get detected
+            // TODO with the default http scheme
+            return readEnd(ReadEndState.InvalidUrl);
           }
         }
         numSlashes++;
