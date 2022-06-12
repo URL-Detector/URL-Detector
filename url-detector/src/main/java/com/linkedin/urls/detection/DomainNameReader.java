@@ -130,7 +130,7 @@ public class DomainNameReader {
   /**
    * Detection option of this reader.
    */
-  private UrlDetectorOptions _options;
+  private UrlDetectorOptionsList _options;
 
   /**
    * Keeps track the number of dots that were found in the domain name.
@@ -191,7 +191,7 @@ public class DomainNameReader {
    * @param options The detector options of this reader.
    * @param characterHandler The handler to call on each non-matching character to count matching quotes and stuff.
    */
-  public DomainNameReader(InputTextReader reader, StringBuilder buffer, String current, UrlDetectorOptions options,
+  public DomainNameReader(InputTextReader reader, StringBuilder buffer, String current, UrlDetectorOptionsList options,
       CharacterHandler characterHandler) {
     _buffer = buffer;
     _current = current;

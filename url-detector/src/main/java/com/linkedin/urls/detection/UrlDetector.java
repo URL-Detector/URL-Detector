@@ -60,7 +60,7 @@ public class UrlDetector {
   /**
    * Stores options for detection.
    */
-  private final UrlDetectorOptions _options;
+  private final UrlDetectorOptionsList _options;
 
   /**
    * The input stream to read.
@@ -128,8 +128,30 @@ public class UrlDetector {
    */
   public UrlDetector(String content, UrlDetectorOptions options) {
     _reader = new InputTextReader(content);
-    _options = options;
-  }
+    UrlDetectorOptionsList optList = new UrlDetectorOptionsList.UrlDetectorOptionsListBuilder()
+       .addOption(options).build();
+     _options = optList;
+   }
+
+   /**
+    * Creates a new UrlDetector object used to find urls inside of text, with a DEFAULT config.
+    * @param content The content to search inside of.
+    */
+   public UrlDetector(String content) {
+     _reader = new InputTextReader(content);
+     UrlDetectorOptionsList optList = new UrlDetectorOptionsList.UrlDetectorOptionsListBuilder().build();
+     _options = optList;
+   }
+
+   /**
+    * Creates a new UrlDetector object used to find urls inside of text, with the provided list of config options.
+    * @param content The content to search inside of.
+    * @param optionsList The UrlDetectorOptionsList to use when detecting the content.
+    */
+   public UrlDetector(String content, UrlDetectorOptionsList optionsList) {
+     _reader = new InputTextReader(content);
+     _options = optionsList;
+   }
 
   /**
    * Detects the urls and returns a list of detected url strings.

@@ -732,6 +732,28 @@ public class TestUriDetection {
     runTest(text, UrlDetectorOptions.HTML, expected);
   }
 
+  @Test
+  public void testOptionsList() {
+    UrlDetectorOptionsList optList = new UrlDetectorOptionsList.UrlDetectorOptionsListBuilder()
+      .addOption(UrlDetectorOptions.ALLOW_SINGLE_LEVEL_DOMAIN)
+      .addOption(UrlDetectorOptions.BRACKET_MATCH)
+      .build();
+    UrlDetector parser = new UrlDetector("[//localhost]", optList);
+    List<Url> found = parser.detect();
+    for(Url url : found) {
+      Assert.assertEquals("localhost", url.getHost());
+    }
+  }
+
+  @Test
+  public void testNewDefaultConstructor() {
+    UrlDetector parser = new UrlDetector("//example.com");
+    List<Url> found = parser.detect();
+    for(Url url : found) {
+      Assert.assertEquals("example.com", url.getHost());
+    }
+  }
+
   private void runTest(String text, UrlDetectorOptions options, String... expected) {
     //do the detection
     UrlDetector parser = new UrlDetector(text, options);
