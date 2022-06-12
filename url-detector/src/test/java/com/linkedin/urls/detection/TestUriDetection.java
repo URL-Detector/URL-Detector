@@ -712,6 +712,13 @@ public class TestUriDetection {
     runTest(text, UrlDetectorOptions.HTML, expected);
   }
 
+  @Test
+  public void testCustomScheme() {
+    runTest("this is a link: myscheme://foo", UrlDetectorOptions.Default);
+    runTest("this is a link: myscheme://www.google.com", UrlDetectorOptions.Default);
+    runTest("this is a link: myscheme://www.google.com", UrlDetectorOptions.ALLOW_ANY_SCHEME, "myscheme://www.google.com");
+  }
+
   private void runTest(String text, UrlDetectorOptions options, String... expected) {
     //do the detection
     UrlDetector parser = new UrlDetector(text, options);

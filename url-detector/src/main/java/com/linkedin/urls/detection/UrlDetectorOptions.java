@@ -60,7 +60,12 @@ public enum UrlDetectorOptions {
   /**
    * Checks for single level domains as well. Ex: go/, http://localhost
    */
-  ALLOW_SINGLE_LEVEL_DOMAIN(32); //00100000
+  ALLOW_SINGLE_LEVEL_DOMAIN(32), //00100000
+
+  /**
+   * Allow custom url schemes. Ex: foo:://bar/taco
+   */
+  ALLOW_ANY_SCHEME(64); //01000000
 
   /**
    * The numeric value.
