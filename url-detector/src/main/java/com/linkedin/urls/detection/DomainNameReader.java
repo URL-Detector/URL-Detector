@@ -524,16 +524,38 @@ public class DomainNameReader {
    */
   private boolean isValidIpv4(String testDomain) {
     boolean valid = false;
-    if (testDomain.length() > 0) {
+    int length = testDomain.length();
+    if (length > 0) {
       //handling format without dots. Ex: http://2123123123123/path/a, http://0x8242343/aksdjf
       if (_dots == 0) {
         try {
           long value;
-          if (testDomain.length() > 2 && testDomain.charAt(0) == '0' && testDomain.charAt(1) == 'x') { //hex
+          if (length > 2 && testDomain.charAt(0) == '0' && testDomain.charAt(1) == 'x') { //hex
+            // digit must be within ['0', '9'] or ['A', 'F'] or ['a', 'f']
+            for (int c = 2; c < length; c++) {
+              char d = testDomain.charAt(c);
+              if ((d < '0' || (d > '9' && d < 'A') || (d > 'F' && d < 'a') || d > 'f')) {
+                return false;
+              }
+            }
             value = Long.parseLong(testDomain.substring(2), 16);
           } else if (testDomain.charAt(0) == '0') { //octal
+            // digit must be within ['0', '7']
+            for (int c = 1; c < length; c++) {
+              char d = testDomain.charAt(c);
+              if (d < '0' || d > '7') {
+                return false;
+              }
+            }
             value = Long.parseLong(testDomain.substring(1), 8);
           } else { //decimal
+            // digit must be within ['0', '9']
+            for (int c = 0; c < length; c++) {
+              char d = testDomain.charAt(c);
+              if (d < '0' || d > '9') {
+                return false;
+              }
+            }
             value = Long.parseLong(testDomain);
           }
           valid = value <= MAX_NUMERIC_DOMAIN_VALUE && value >= MIN_NUMERIC_DOMAIN_VALUE;
@@ -548,16 +570,38 @@ public class DomainNameReader {
         //check each part of the ip and make sure its valid.
         for (int i = 0; i < parts.length && valid; i++) {
           String part = parts[i];
-          if (part.length() > 0) {
+          int partLen = part.length();
+          if (partLen > 0) {
             String parsedNum;
             int base;
-            if (part.length() > 2 && part.charAt(0) == '0' && part.charAt(1) == 'x') { //dotted hex
+            if (partLen > 2 && part.charAt(0) == '0' && part.charAt(1) == 'x') { //dotted hex
+              // digit must be within ['0', '9'] or ['A', 'F'] or ['a', 'f']
+              for (int c = 2; c < partLen; c++) {
+                char d = part.charAt(c);
+                if ((d < '0' || (d > '9' && d < 'A') || (d > 'F' && d < 'a') || d > 'f')) {
+                  return false;
+                }
+              }
               parsedNum = part.substring(2);
               base = 16;
             } else if (part.charAt(0) == '0') { //dotted octal
+              // digit must be within ['0', '7']
+              for (int c = 1; c < partLen; c++) {
+                char d = part.charAt(c);
+                if (d < '0' || d > '7') {
+                  return false;
+                }
+              }
               parsedNum = part.substring(1);
               base = 8;
             } else { //dotted decimal
+              // digit must be within ['0', '9']
+              for (int c = 0; c < partLen; c++) {
+                char d = part.charAt(c);
+                if (d < '0' || d > '9') {
+                  return false;
+                }
+              }
               parsedNum = part;
               base = 10;
             }
