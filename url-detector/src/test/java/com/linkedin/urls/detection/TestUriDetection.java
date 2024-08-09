@@ -732,6 +732,28 @@ public class TestUriDetection {
     runTest(text, UrlDetectorOptions.HTML, expected);
   }
 
+  @Test
+  public void testColonWithoutSlashes() {
+    UrlDetector parser = new UrlDetector("ftp:example.com", UrlDetectorOptions.ALLOW_COLON_WITHOUT_SLASHES);
+    List<Url> found = parser.detect();
+    String[] foundArray = new String[found.size()];
+    for (int i = 0; i < foundArray.length; i++) {
+      Assert.assertEquals(found.get(i).getScheme(), "ftp"); // Should be detected as if it was ftp://
+      Assert.assertEquals(found.get(i).getHost(), "example.com");
+    }
+  }
+
+  @Test
+  public void testColonWithoutSlashesFail() {
+    UrlDetector parser = new UrlDetector("ftp:example.com", UrlDetectorOptions.Default);
+    List<Url> found = parser.detect();
+    String[] foundArray = new String[found.size()];
+    for (int i = 0; i < foundArray.length; i++) {
+      Assert.assertEquals(found.get(i).getScheme(), "http"); // Should be detected as a username now and set to default http://
+      Assert.assertEquals(found.get(i).getHost(), "example.com");
+    }
+  }
+
   private void runTest(String text, UrlDetectorOptions options, String... expected) {
     //do the detection
     UrlDetector parser = new UrlDetector(text, options);

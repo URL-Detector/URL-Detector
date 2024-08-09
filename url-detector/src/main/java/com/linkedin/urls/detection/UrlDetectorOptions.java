@@ -63,6 +63,11 @@ public enum UrlDetectorOptions {
   ALLOW_SINGLE_LEVEL_DOMAIN(32), //00100000
 
   /**
+   * Checks for URLs without slashes as well. Ex: http:example.com
+   */
+  ALLOW_COLON_WITHOUT_SLASHES(64), //01000000
+
+  /**
    * Checks for URLs against the full IANA scheme list for maximum possible detections
    */
   EXTENDED_IANA_DETECTION(128); //10000000

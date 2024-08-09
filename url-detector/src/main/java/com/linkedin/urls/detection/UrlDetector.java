@@ -457,6 +457,18 @@ public class UrlDetector {
     int originalLength = _buffer.length();
     int numSlashes = 0;
 
+    // If we had already read something before the : and we are matching regardless of slashes, assume it's a scheme
+    if (originalLength > 0 && _options.hasFlag(UrlDetectorOptions.ALLOW_COLON_WITHOUT_SLASHES)) {
+      // Add the slashes to the end of the scheme so it matches what's in the scheme list
+      int schemeStartIndex = findValidSchemeStartIndex(_buffer.toString()+"//");
+      if (schemeStartIndex >= 0) {
+        _buffer.delete(0, schemeStartIndex);
+        _currentUrlMarker.setIndex(UrlPart.SCHEME, 0);
+        return true;
+      }
+      // If this didn't match a defined scheme, continue processing as usual
+    }
+
     while (!_reader.eof()) {
       char curr = _reader.read();
 
