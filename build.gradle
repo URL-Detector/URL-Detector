@@ -18,8 +18,8 @@ subprojects {
   plugins.withType(JavaPlugin) {
 
     dependencies {
-      testCompile spec.external.testng
-      compile spec.external.'commonsLang'
+      testImplementation spec.external.testng
+      implementation spec.external.'commonsLang'
     }
 
     test {
@@ -35,4 +35,3 @@ subprojects {
     }
   }
 }
-
