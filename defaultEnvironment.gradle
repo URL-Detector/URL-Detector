@@ -4,7 +4,6 @@ project.ext.spec = [
     "product": [],
     "external": [
         "testng": "org.testng:testng:6.1.1",
-        "commonsLang": "org.apache.commons:commons-lang3:3.1"
     ]
 ]
 

@@ -10,7 +10,6 @@
 package com.linkedin.urls;
 
 import java.util.Stack;
-import org.apache.commons.lang3.StringUtils;
 
 
 class PathNormalizer {
@@ -22,7 +21,7 @@ class PathNormalizer {
    */
   protected String normalizePath(String path) {
 
-    if (StringUtils.isEmpty(path)) {
+    if (path == null || path.isEmpty()) {
       return path;
     }
     path = UrlUtil.decode(path);

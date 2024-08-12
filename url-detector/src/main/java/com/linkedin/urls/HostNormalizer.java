@@ -17,7 +17,6 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.apache.commons.lang3.StringUtils;
 
 
 /**
@@ -44,7 +43,7 @@ public class HostNormalizer {
   }
 
   private void normalizeHost() {
-    if (StringUtils.isEmpty(_host)) {
+    if (_host == null || _host.isEmpty()) {
       return;
     }
 
@@ -77,7 +76,7 @@ public class HostNormalizer {
       }
     }
 
-    if (StringUtils.isEmpty(host)) {
+    if (host == null || host.isEmpty()) {
       return;
     }
 

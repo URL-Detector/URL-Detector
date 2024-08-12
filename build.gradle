@@ -19,7 +19,6 @@ subprojects {
 
     dependencies {
       testImplementation spec.external.testng
-      implementation spec.external.'commonsLang'
     }
 
     test {

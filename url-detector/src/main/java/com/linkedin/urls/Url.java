@@ -15,7 +15,6 @@ import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.lang3.StringUtils;
 
 
 /**
@@ -438,7 +437,7 @@ public class Url {
    * @return Formats the url to: [scheme]://[username]:[password]@[host]:[port]/[path]?[query]#[fragment]
    */
   public String getFullUrl() {
-    return getFullUrlWithoutFragment() + StringUtils.defaultString(getFragment());
+    return getFullUrlWithoutFragment() + getFragment();
   }
 
   /**
@@ -447,23 +446,26 @@ public class Url {
    */
   public String getFullUrlWithoutFragment() {
     StringBuilder url = new StringBuilder();
-    if (!StringUtils.isEmpty(getScheme())) {
-      url.append(getScheme());
+    String scheme = getScheme();
+    if (scheme != null && !scheme.isEmpty()) {
+      url.append(scheme);
       url.append(":");
     }
     url.append("//");
 
-    if (!StringUtils.isEmpty(getUsername())) {
-      url.append(getUsername());
-      if (!StringUtils.isEmpty(getPassword())) {
+    String username = getUsername();
+    if (username != null && !username.isEmpty()) {
+      url.append(username);
+      String password = getPassword();
+      if (password != null && !password.isEmpty()) {
         url.append(":");
-        url.append(getPassword());
+        url.append(password);
       }
       url.append("@");
     }
 
     url.append(getHost());
-    if (getPort() > 0 && getPort() != SCHEME_PORT_MAP.get(getScheme())) {
+    if (getPort() > 0 && getPort() != SCHEME_PORT_MAP.get(scheme)) {
       url.append(":");
       url.append(getPort());
     }
@@ -486,21 +488,21 @@ public class Url {
         _scheme = DEFAULT_SCHEME;
       }
     }
-    return StringUtils.defaultString(_scheme);
+    return _scheme == null ? "" : _scheme;
   }
 
   public String getUsername() {
     if (_username == null) {
       populateUsernamePassword();
     }
-    return StringUtils.defaultString(_username);
+    return _username == null ? "" : _username;
   }
 
   public String getPassword() {
     if (_password == null) {
       populateUsernamePassword();
     }
-    return StringUtils.defaultString(_password);
+    return _password == null ? "" : _password;
   }
 
   public String getHost() {
@@ -545,14 +547,14 @@ public class Url {
     if (_query == null) {
       _query = getPart(UrlPart.QUERY);
     }
-    return StringUtils.defaultString(_query);
+    return _query == null ? "" : _query;
   }
 
   public String getFragment() {
     if (_fragment == null) {
       _fragment = getPart(UrlPart.FRAGMENT);
     }
-    return StringUtils.defaultString(_fragment);
+    return _fragment == null ? "" : _fragment;
   }
 
   /**
