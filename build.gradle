@@ -1,24 +1,14 @@
-
-
-boolean isDefaultEnvironment() {
-  !project.hasProperty('overrideBuildEnvironment')
-}
-
-File getEnvironmentScript()
-{
-  final File env = file(defaultEnvironment ? 'defaultEnvironment.gradle' : project.overrideBuildEnvironment)
-  assert env.isFile() : "The environment script [$env] does not exists or is not a file."
-  return env
-}
-
-apply from: environmentScript
-
-
 subprojects {
+  repositories {
+    mavenCentral()
+  }
+
+  project.buildDir = new File(project.rootProject.buildDir, project.name)
+
   plugins.withType(JavaPlugin) {
 
     dependencies {
-      testImplementation spec.external.testng
+      testImplementation "org.testng:testng:6.1.1"
     }
 
     test {
