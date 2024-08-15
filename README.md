@@ -95,11 +95,6 @@ This library was written by the security team and Linkedin when other options di
 * Copyright © 2004-2014 Cédric Beust
 * License: Apache 2.0
 
-### Apache CommonsLang3: org.apache.commons:commons-lang3:3.1
-* http://commons.apache.org/proper/commons-lang/
-* Copyright © 2001-2014 The Apache Software Foundation
-* License: Apache 2.0
-
 ---
 ## License
 
