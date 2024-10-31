@@ -9,99 +9,92 @@
  */
 package com.linkedin.urls.detection;
 
-import org.testng.Assert;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 
-public class TestCharUtils {
+class TestCharUtils {
 
-  @Test
-  public void testCharUtilsIsHex() {
-    char[] arr = { 'a', 'A', '0', '9' };
-    for (char a : arr) {
-      Assert.assertTrue(CharUtils.isHex(a));
-    }
-
-    char[] arr2 = { '~', ';', 'Z', 'g' };
-    for (char a : arr2) {
-      Assert.assertFalse(CharUtils.isHex(a));
-    }
+  @ParameterizedTest
+  @ValueSource(chars = { 'a', 'A', '0', '9' })
+  void testCharUtilsIsHex(char a) {
+      assertTrue(CharUtils.isHex(a));
   }
 
-  @Test
-  public void testCharUtilsIsNumeric() {
-    char[] arr = { '0', '4', '6', '9' };
-    for (char a : arr) {
-      Assert.assertTrue(CharUtils.isNumeric(a));
-    }
-
-    char[] arr2 = { 'a', '~', 'A', 0 };
-    for (char a : arr2) {
-      Assert.assertFalse(CharUtils.isNumeric(a));
-    }
+  @ParameterizedTest
+  @ValueSource(chars = { '~', ';', 'Z', 'g' })
+  void testCharUtilsIsNotHex(char a) {
+      assertFalse(CharUtils.isHex(a));
   }
 
-  @Test
-  public void testCharUtilsIsAlpha() {
-    char[] arr = { 'a', 'Z', 'f', 'X' };
-    for (char a : arr) {
-      Assert.assertTrue(CharUtils.isAlpha(a));
-    }
-
-    char[] arr2 = { '0', '9', '[', '~' };
-    for (char a : arr2) {
-      Assert.assertFalse(CharUtils.isAlpha(a));
-    }
+  @ParameterizedTest
+  @ValueSource(chars = { '0', '4', '6', '9' })
+  void testCharUtilsIsNumeric(char a) {
+    assertTrue(CharUtils.isNumeric(a));
   }
 
-  @Test
-  public void testCharUtilsIsAlphaNumeric() {
-    char[] arr = { 'a', 'G', '3', '9' };
-    for (char a : arr) {
-      Assert.assertTrue(CharUtils.isAlphaNumeric(a));
-    }
-
-    char[] arr2 = { '~', '-', '_', '\n' };
-    for (char a : arr2) {
-      Assert.assertFalse(CharUtils.isAlphaNumeric(a));
-    }
+  @ParameterizedTest
+  @ValueSource(chars = { 'a', '~', 'A', 0 })
+  void testCharUtilsIsNotNumeric(char a) {
+    assertFalse(CharUtils.isNumeric(a));
   }
 
-  @Test
-  public void testCharUtilsIsUnreserved() {
-    char[] arr = { '-', '.', 'a', '9', 'Z', '_', 'f' };
-    for (char a : arr) {
-      Assert.assertTrue(CharUtils.isUnreserved(a));
-    }
-
-    char[] arr2 = { ' ', '!', '(', '\n' };
-    for (char a : arr2) {
-      Assert.assertFalse(CharUtils.isUnreserved(a));
-    }
+  @ParameterizedTest
+  @ValueSource(chars = { 'a', 'Z', 'f', 'X' })
+  void testCharUtilsIsAlpha(char a) {
+    assertTrue(CharUtils.isAlpha(a));
   }
 
-  @DataProvider
-  private Object[][] getSplitStrings() {
-    return new Object[][] {
-        {"192.168.1.1"},
-        {".."},
-        {"192%2e168%2e1%2e1"},
-        {"asdf"},
-        {"192.39%2e1%2E1"},
-        {"as\uFF61awe.a3r23.lkajsf0ijr...."},
-        {"%2e%2easdf"},
-        {"sdoijf%2e"},
-        {"ksjdfh.asdfkj.we%2"},
-        {"0xc0%2e0x00%2e0x02%2e0xeb"},
-        {""}
-    };
+  @ParameterizedTest
+  @ValueSource(chars = { '0', '9', '[', '~' })
+  void testCharUtilsIsNotAlpha(char a) {
+    assertFalse(CharUtils.isAlpha(a));
   }
 
-  @Test(dataProvider = "getSplitStrings")
-  public void testSplitByDot(String stringToSplit) {
-    Assert
-        .assertEquals(CharUtils.splitByDot(stringToSplit), stringToSplit.split("[\\.\u3002\uFF0E\uFF61]|%2e|%2E", -1));
+  @ParameterizedTest
+  @ValueSource(chars = { 'a', 'G', '3', '9' })
+  void testCharUtilsIsAlphaNumeric(char a) {
+    assertTrue(CharUtils.isAlphaNumeric(a));
+  }
+
+  @ParameterizedTest
+  @ValueSource(chars = { '~', '-', '_', '\n' })
+  void testCharUtilsIsNotAlphaNumeric(char a) {
+    assertFalse(CharUtils.isAlphaNumeric(a));
+  }
+
+  @ParameterizedTest
+  @ValueSource(chars = { '-', '.', 'a', '9', 'Z', '_', 'f' })
+  void testCharUtilsIsUnreserved(char a) {
+    assertTrue(CharUtils.isUnreserved(a));
+  }
+
+  @ParameterizedTest
+  @ValueSource(chars = { ' ', '!', '(', '\n' })
+  void testCharUtilsIsNotUnreserved(char a) {
+    assertFalse(CharUtils.isUnreserved(a));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "192.168.1.1",
+    "..",
+    "192%2e168%2e1%2e1",
+    "asdf",
+    "192.39%2e1%2E1",
+    "as\uFF61awe.a3r23.lkajsf0ijr....",
+    "%2e%2easdf",
+    "sdoijf%2e",
+    "ksjdfh.asdfkj.we%2",
+    "0xc0%2e0x00%2e0x02%2e0xeb",
+    ""
+  })
+  void testSplitByDot(String stringToSplit) {
+    assertArrayEquals(CharUtils.splitByDot(stringToSplit), stringToSplit.split("[\\.\u3002\uFF0E\uFF61]|%2e|%2E", -1));
   }
 
 }

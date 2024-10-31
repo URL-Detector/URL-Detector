@@ -9,68 +9,74 @@
  */
 package com.linkedin.urls.detection;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
+
 import com.linkedin.urls.Url;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.testng.Assert;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 
-public class TestUriDetection {
+class TestUriDetection {
 
   @Test
-  public void testBasicString() {
+  void testBasicString() {
     runTest("hello world", UrlDetectorOptions.Default);
   }
 
   @Test
-  public void testBasicDetect() {
+  void testBasicDetect() {
     runTest("this is a link: www.google.com", UrlDetectorOptions.Default, "www.google.com");
   }
 
   @Test
-  public void testExtendedIANAFailure()
-  {
+  void testExtendedIANAFailure() {
     UrlDetector parser = new UrlDetector("telnet://example.com", UrlDetectorOptions.Default);
     List<Url> found = parser.detect();
-    for (int i = 0; i < found.size(); i++) {
-      Assert.assertEquals(found.get(i).getScheme(),"http"); // Should still find the link but will assume it's HTTP under default options
+    for (Url url : found) {
+      assertEquals(url.getScheme(),"http"); // Should still find the link but will assume it's HTTP under default options
     }
   }
 
   @Test
-  public void testExtendedIANASuccess()
-  {
+  void testExtendedIANASuccess() {
     UrlDetector parser = new UrlDetector("telnet://example.com", UrlDetectorOptions.EXTENDED_IANA_DETECTION);
     List<Url> found = parser.detect();
-    for (int i = 0; i < found.size(); i++) {
-      Assert.assertEquals(found.get(i).getScheme(),"telnet"); // Should find the link and set the scheme to the correct "telnet" value
+    for (Url url : found) {
+      assertEquals(url.getScheme(),"telnet"); // Should find the link and set the scheme to the correct "telnet" value
     }
   }
 
   @Test
-  public void testEmailAndNormalUrl() {
+  void testEmailAndNormalUrl() {
     runTest("my email is vshlosbe@linkedin.com and my site is http://www.linkedin.com/vshlos",
         UrlDetectorOptions.Default, "vshlosbe@linkedin.com", "http://www.linkedin.com/vshlos");
   }
 
   @Test
-  public void testTwoBasicUrls() {
+  void testTwoBasicUrls() {
     runTest("the url google.com is a lot better then www.google.com.", UrlDetectorOptions.Default, "google.com",
         "www.google.com.");
   }
 
   @Test
-  public void testLongUrl() {
+  void testLongUrl() {
     runTest("google.com.google.com is kind of a valid url", UrlDetectorOptions.Default, "google.com.google.com");
   }
 
   @Test
-  public void testInternationalUrls() {
+  void testInternationalUrls() {
     runTest("this is an international domain: http://\u043F\u0440\u0438\u043c\u0435\u0440.\u0438\u0441\u043f\u044b"
         + "\u0442\u0430\u043d\u0438\u0435 so is this: \u4e94\u7926\u767c\u5c55.\u4e2d\u570b.",
         UrlDetectorOptions.Default,
@@ -79,7 +85,7 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testInternationalUrlsInHtml() {
+  void testInternationalUrlsInHtml() {
     runTest(
         "<a rel=\"nofollow\" class=\"external text\" href=\"http://xn--mgbh0fb.xn--kgbechtv/\">http://\u1605\u1579\u1575\u1604.\u1573\u1582\u1578\u1576\u1575\u1585</a>",
         UrlDetectorOptions.HTML, "http://xn--mgbh0fb.xn--kgbechtv/",
@@ -87,43 +93,43 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testDomainWithUsernameAndPassword() {
+  void testDomainWithUsernameAndPassword() {
     runTest("domain with username is http://username:password@www.google.com/site/1/2", UrlDetectorOptions.Default,
         "http://username:password@www.google.com/site/1/2");
   }
 
   @Test
-  public void testFTPWithUsernameAndPassword() {
+  void testFTPWithUsernameAndPassword() {
     runTest("ftp with username is ftp://username:password@www.google.com", UrlDetectorOptions.Default,
         "ftp://username:password@www.google.com");
   }
 
   @Test
-  public void testUncommonFormatUsernameAndPassword() {
+  void testUncommonFormatUsernameAndPassword() {
     runTest("weird url with username is username:password@www.google.com", UrlDetectorOptions.Default,
         "username:password@www.google.com");
   }
 
   @Test
-  public void testEmailAndLinkWithUserPass() {
+  void testEmailAndLinkWithUserPass() {
     runTest("email and username is hello@test.google.com or hello@www.google.com hello:password@www.google.com",
         UrlDetectorOptions.Default, "hello@test.google.com", "hello@www.google.com", "hello:password@www.google.com");
   }
 
   @Test
-  public void testWrongSpacingInSentence() {
+  void testWrongSpacingInSentence() {
     runTest("I would not like to work at salesforce.com, it looks like a crap company.and not cool!",
         UrlDetectorOptions.Default, "salesforce.com", "company.and");
   }
 
   @Test
-  public void testNumbersAreNotDetected() {
+  void testNumbersAreNotDetected() {
     //make sure pure numbers don't work, but domains with numbers do.
     runTest("Do numbers work? such as 3.1415 or 4.com", UrlDetectorOptions.Default, "4.com");
   }
 
   @Test
-  public void testNewLinesAndTabsAreDelimiters() {
+  void testNewLinesAndTabsAreDelimiters() {
     runTest(
         "Do newlines and tabs break? google.com/hello/\nworld www.yahoo.com\t/stuff/ yahoo.com/\thello news.ycombinator.com\u0000/hello world",
         UrlDetectorOptions.Default,
@@ -132,24 +138,24 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testIpAddressFormat() {
+  void testIpAddressFormat() {
     runTest(
         "How about IP addresses? fake: 1.1.1 1.1.1.1.1 0.0.0.256 255.255.255.256 real: 1.1.1.1 192.168.10.1 1.1.1.1.com 255.255.255.255",
         UrlDetectorOptions.Default, "1.1.1.1", "192.168.10.1", "1.1.1.1.com", "255.255.255.255");
   }
 
   @Test
-  public void testNumericIpAddress() {
+  void testNumericIpAddress() {
     runTest("http://3232235521/helloworld", UrlDetectorOptions.Default, "http://3232235521/helloworld");
   }
 
   @Test
-  public void testNumericIpAddressWithPort() {
+  void testNumericIpAddressWithPort() {
     runTest("http://3232235521:8080/helloworld", UrlDetectorOptions.Default, "http://3232235521:8080/helloworld");
   }
 
   @Test
-  public void testDomainAndLabelSizeConstraints() {
+  void testDomainAndLabelSizeConstraints() {
     //Really long addresses testing rules about total length of domain name and number of labels in a domain and size of each label.
     runTest(
         "This will work: 1.2.3.4.5.6.7.8.9.0.1.2.3.4.5.6.7.8.9.0.1.2.3.4.5.6.7.8.9.0.1.2.3.4.5.6.7.8.9.0.1.2.3.4.5.6.7.8.9.0.1.2.3.4.5.6.7.8.9.0.1.2.3.4.5.6.7.8.9.0.1.2.3.4.5.6.7.8.9.0.1.2.3.4.5.6.7.8.9.0.1.2.3.4.5.6.7.8.9.0.1.2.3.4.5.6.7.8.9.0.1.2.3.4.5.6.7.8.9.0.a.b.c.d.e.ly "
@@ -162,14 +168,14 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testBasicHtml() {
+  void testBasicHtml() {
     runTest(
         "<script type=\"text/javascript\">var a = 'http://www.abc.com', b=\"www.def.com\"</script><a href=\"http://www.google.com\">google.com</a>",
         UrlDetectorOptions.HTML, "http://www.google.com", "http://www.abc.com", "www.def.com", "google.com");
   }
 
   @Test
-  public void testLongUrlWithInheritedScheme() {
+  void testLongUrlWithInheritedScheme() {
     runTest(
         "<link rel=\"stylesheet\" href=\"//bits.wikimedia.org/en.wikipedia.org/load.php?debug=false&amp;lang=en&amp;modules=ext.gadget.DRN-wizard%2CReferenceTooltips%2Ccharinsert%2Cteahouse%7Cext.wikihiero%7Cmediawiki.legacy.commonPrint%2Cshared%7Cmw.PopUpMediaTransform%7Cskins.vector&amp;only=styles&amp;skin=vector&amp;*\" />",
         UrlDetectorOptions.HTML,
@@ -177,7 +183,7 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testQuoteMatching() {
+  void testQuoteMatching() {
     //test quote matching with no html
     runTest(
         "my website is \"www.google.com\" but my email is \"vshlos@gmail.com\" \" www.abcd.com\" \" hello.com \"www.abc.com\"",
@@ -186,38 +192,38 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testIncorrectParsingHtmlWithBadOptions() {
+  void testIncorrectParsingHtmlWithBadOptions() {
     runTest("<a href=\"http://www.google.com/\">google.com</a>", UrlDetectorOptions.Default,
         "http://www.google.com/\">google.com</a>");
   }
 
   @Test
-  public void testBracketMatching() {
+  void testBracketMatching() {
     runTest(
         "MY url (www.google.com) is very cool. the domain [www.google.com] is popular and when written like this {www.google.com} it looks like code",
         UrlDetectorOptions.BRACKET_MATCH, "www.google.com", "www.google.com", "www.google.com");
   }
 
   @Test
-  public void testParseJson() {
+  void testParseJson() {
     runTest("{\"url\": \"www.google.com\", \"hello\": \"world\", \"anotherUrl\":\"http://www.yahoo.com\"}",
         UrlDetectorOptions.JSON, "www.google.com", "http://www.yahoo.com");
   }
 
   @Test
-  public void testParseJavascript() {
+  void testParseJavascript() {
     runTest("var url = 'www.abc.com';\n" + "var url = \"www.def.com\";", UrlDetectorOptions.JAVASCRIPT, "www.abc.com",
         "www.def.com");
   }
 
   @Test
-  public void testParseXml() {
+  void testParseXml() {
     runTest("<url attr=\"www.def.com\">www.abc.com</url><url href=\"hello.com\" />", UrlDetectorOptions.XML,
         "www.abc.com", "www.def.com", "hello.com");
   }
 
   @Test
-  public void testNonStandardDots() {
+  void testNonStandardDots() {
     runTest(
         "www\u3002google\u3002com username:password@www\uFF0Eyahoo\uFF0Ecom http://www\uFF61facebook\uFF61com http://192\u3002168\uFF0E0\uFF611/",
         UrlDetectorOptions.Default,
@@ -227,43 +233,43 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testInvalidPartsUrl() {
+  void testInvalidPartsUrl() {
     runTest("aksdhf http://asdf#asdf.google.com", UrlDetectorOptions.Default, "asdf.google.com");
     runTest("00:41.<google.com/>", UrlDetectorOptions.HTML, "google.com/");
   }
 
   @Test
-  public void testNonStandardDotsBacktracking() {
+  void testNonStandardDotsBacktracking() {
     runTest("\u9053 \u83dc\u3002\u3002\u3002\u3002", UrlDetectorOptions.Default);
   }
 
   @Test
-  public void testBacktrackingStrangeFormats() {
+  void testBacktrackingStrangeFormats() {
     runTest("http:http:http://www.google.com www.www:yahoo.com yahoo.com.br hello.hello..hello.com",
         UrlDetectorOptions.Default, "www.www", "hello.hello.", "http://www.google.com", "yahoo.com", "yahoo.com.br",
         "hello.com");
   }
 
   @Test
-  public void testBacktrackingUsernamePassword() {
+  void testBacktrackingUsernamePassword() {
     runTest("check out my url:www.google.com", UrlDetectorOptions.Default, "www.google.com");
     runTest("check out my url:www.google.com ", UrlDetectorOptions.Default, "www.google.com");
   }
 
   @Test
-  public void testBacktrackingEmptyDomainName() {
+  void testBacktrackingEmptyDomainName() {
     runTest("check out my http:///hello", UrlDetectorOptions.Default);
     runTest("check out my http://./hello", UrlDetectorOptions.Default);
   }
 
   @Test
-  public void testDoubleScheme() {
+  void testDoubleScheme() {
     runTest("http://http://", UrlDetectorOptions.Default);
     runTest("hello http://http://", UrlDetectorOptions.Default);
   }
 
   @Test
-  public void testMultipleSchemes() {
+  void testMultipleSchemes() {
     runTest("http://http://www.google.com", UrlDetectorOptions.Default, "http://www.google.com");
     runTest("make sure it's right here http://http://www.google.com", UrlDetectorOptions.Default,
         "http://www.google.com");
@@ -276,7 +282,7 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testDottedHexIpAddress() {
+  void testDottedHexIpAddress() {
     runTest("http://0xc0.0x00.0xb2.0xEB", UrlDetectorOptions.Default, "http://0xc0.0x00.0xb2.0xEB");
     runTest("http://0xc0.0x0.0xb2.0xEB", UrlDetectorOptions.Default, "http://0xc0.0x0.0xb2.0xEB");
     runTest("http://0x000c0.0x00000.0xb2.0xEB", UrlDetectorOptions.Default, "http://0x000c0.0x00000.0xb2.0xEB");
@@ -288,7 +294,7 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testDottedOctalIpAddress() {
+  void testDottedOctalIpAddress() {
     runTest("http://0301.0250.0002.0353", UrlDetectorOptions.Default, "http://0301.0250.0002.0353");
     runTest("http://0301.0250.0002.0353/bobo", UrlDetectorOptions.Default, "http://0301.0250.0002.0353/bobo");
     runTest("http://192.168.017.015/", UrlDetectorOptions.Default, "http://192.168.017.015/");
@@ -299,7 +305,7 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testHexIpAddress() {
+  void testHexIpAddress() {
     runTest("http://0xC00002EB/hello", UrlDetectorOptions.Default, "http://0xC00002EB/hello");
     runTest("http://0xC00002EB.com/hello", UrlDetectorOptions.Default, "http://0xC00002EB.com/hello");
     runTest("still look it up as a normal url http://0xC00002EXsB.com/hello", UrlDetectorOptions.Default,
@@ -310,7 +316,7 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testOctalIpAddress() {
+  void testOctalIpAddress() {
     runTest("http://030000001353/bobobo", UrlDetectorOptions.Default, "http://030000001353/bobobo");
     runTest("ooh look i can find it in text http://030000001353/bobo like this", UrlDetectorOptions.Default,
         "http://030000001353/bobo");
@@ -318,14 +324,14 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testUrlWithEmptyPort() {
+  void testUrlWithEmptyPort() {
     runTest("http://wtfismyip.com://foo.html", UrlDetectorOptions.Default, "http://wtfismyip.com://foo.html");
     runTest("make sure its right here http://wtfismyip.com://foo.html", UrlDetectorOptions.Default,
         "http://wtfismyip.com://foo.html");
   }
 
   @Test
-  public void testUrlEncodedDot() {
+  void testUrlEncodedDot() {
     runTest("hello www%2ewtfismyip%2ecom", UrlDetectorOptions.Default, "www%2ewtfismyip%2ecom");
     runTest("hello wtfismyip%2ecom", UrlDetectorOptions.Default, "wtfismyip%2ecom");
     runTest("http://wtfismyip%2ecom", UrlDetectorOptions.Default, "http://wtfismyip%2ecom");
@@ -333,7 +339,7 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testUrlEncodedBadPath() {
+  void testUrlEncodedBadPath() {
     runTest("%2ewtfismyip", UrlDetectorOptions.Default);
     runTest("wtfismyip%2e", UrlDetectorOptions.Default);
     runTest("wtfismyip%2ecom%2e", UrlDetectorOptions.Default, "wtfismyip%2ecom%2e");
@@ -342,19 +348,19 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testUrlEncodedColon() {
+  void testUrlEncodedColon() {
     runTest("http%3A//google.com", UrlDetectorOptions.Default, "http%3A//google.com");
     runTest("hello http%3A//google.com", UrlDetectorOptions.Default, "http%3A//google.com");
   }
 
   @Test
-  public void testIncompleteBracketSet() {
+  void testIncompleteBracketSet() {
     runTest("[google.com", UrlDetectorOptions.BRACKET_MATCH, "google.com");
     runTest("lalla [google.com", UrlDetectorOptions.Default, "google.com");
   }
 
   @Test
-  public void testDetectUrlEncoded() {
+  void testDetectUrlEncoded() {
     runTest("%77%77%77%2e%67%75%6d%62%6c%61%72%2e%63%6e", UrlDetectorOptions.Default,
         "%77%77%77%2e%67%75%6d%62%6c%61%72%2e%63%6e");
     runTest(" asdf  %77%77%77%2e%67%75%6d%62%6c%61%72%2e%63%6e", UrlDetectorOptions.Default,
@@ -364,7 +370,7 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testSingleLevelDomain() {
+  void testSingleLevelDomain() {
     runTest("localhost:9000/lalala hehe", UrlDetectorOptions.ALLOW_SINGLE_LEVEL_DOMAIN, "localhost:9000/lalala");
     runTest("http://localhost lasdf", UrlDetectorOptions.ALLOW_SINGLE_LEVEL_DOMAIN, "http://localhost");
     runTest("localhost:9000/lalala", UrlDetectorOptions.ALLOW_SINGLE_LEVEL_DOMAIN, "localhost:9000/lalala");
@@ -388,7 +394,7 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testIncompleteIpAddresses() {
+  void testIncompleteIpAddresses() {
     runTest("hello 10...", UrlDetectorOptions.Default);
     runTest("hello 10...1", UrlDetectorOptions.Default);
     runTest("hello 10..1.", UrlDetectorOptions.Default);
@@ -405,37 +411,33 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testIPv4EncodedDot() {
+  void testIPv4EncodedDot() {
     runTest("hello 192%2e168%2e1%2e1", UrlDetectorOptions.Default, "192%2e168%2e1%2e1");
     runTest("hello 192.168%2e1%2e1/lalala", UrlDetectorOptions.Default, "192.168%2e1%2e1/lalala");
   }
 
   @Test
-  public void testIPv4HexEncodedDot() {
+  void testIPv4HexEncodedDot() {
     runTest("hello 0xee%2e0xbb%2e0x1%2e0x1", UrlDetectorOptions.Default, "0xee%2e0xbb%2e0x1%2e0x1");
     runTest("hello 0xee%2e0xbb.0x1%2e0x1/lalala", UrlDetectorOptions.Default, "0xee%2e0xbb.0x1%2e0x1/lalala");
   }
 
   //IPv6 Tests
 
-  @DataProvider
-  public Object[][] getIPv6ColonsTestStrings() {
-    return new Object[][] {
-        {"[fe80:aaaa:aaaa:aaaa:3dd0:7f8e:57b7:34d5]"},
-        {"[bcad::aaaa:aaaa:3dd0:7f8e:222.168.1.1]"},
-        {"[bcad::aaaa:aaaa:3dd0:7f8e:57b7:34d5]"},
-        {"[dead::85a3:0:0:8a2e:370:7334]"},
-        {"[::BEEF:0:8a2e:370:7334]"},
-        {"[::beEE:EeEF:0:8a2e:370:7334]"},
-        {"[::]"},
-        {"[0::]"},
-        {"[::1]"},
-        {"[0::1]"}
-    };
-  }
-
-  @Test(dataProvider = "getIPv6ColonsTestStrings")
-  public void testIPv6Colons(String testString) {
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "[fe80:aaaa:aaaa:aaaa:3dd0:7f8e:57b7:34d5]",
+    "[bcad::aaaa:aaaa:3dd0:7f8e:222.168.1.1]",
+    "[bcad::aaaa:aaaa:3dd0:7f8e:57b7:34d5]",
+    "[dead::85a3:0:0:8a2e:370:7334]",
+    "[::BEEF:0:8a2e:370:7334]",
+    "[::beEE:EeEF:0:8a2e:370:7334]",
+    "[::]",
+    "[0::]",
+    "[::1]",
+    "[0::1]"
+  })
+  void testIPv6Colons(String testString) {
     runTest(testString, UrlDetectorOptions.Default, testString);
     runTest(" " + testString + " ", UrlDetectorOptions.Default, testString);
     runTest("bobo" + testString + " ", UrlDetectorOptions.Default, testString);
@@ -444,31 +446,34 @@ public class TestUriDetection {
     runTest("alkfs:afef:" + testString, UrlDetectorOptions.Default, testString);
   }
 
-  @Test
-  public void testIpv6BadUrls() {
-    runTest("[fe80:aaaa:aaaa:aaaa:3dd0:7f8e:57b7:34d5f]", UrlDetectorOptions.Default);
-    runTest("[bcad::kkkk:aaaa:3dd0:7f8e:57b7:34d5]", UrlDetectorOptions.Default);
-    runTest("[:BAD:BEEF:0:8a2e:370:7334", UrlDetectorOptions.Default);
-    runTest("[:::]", UrlDetectorOptions.Default);
-    runTest("[lalala:we]", UrlDetectorOptions.Default);
-    runTest("[:0]", UrlDetectorOptions.Default);
-    runTest("[:0:]", UrlDetectorOptions.Default);
-    runTest("::]", UrlDetectorOptions.Default);
-    runTest("[:", UrlDetectorOptions.Default);
-    runTest("fe80:22:]3123:[adf]", UrlDetectorOptions.Default);
-    runTest("[][123[][ae][fae][de][:a][d]aef:E][f", UrlDetectorOptions.Default);
-    runTest("[]]]:d]", UrlDetectorOptions.Default);
-    runTest("[fe80:aaaa:aaaa:aaaa:3dd0:7f8e:57b7:34d5:addd:addd:adee]", UrlDetectorOptions.Default);
-    runTest("[][][]2[d][]][]]]:d][[[:d[e][aee:]af:", UrlDetectorOptions.Default);
-    runTest("[adf]", UrlDetectorOptions.Default);
-    runTest("[adf:]", UrlDetectorOptions.Default);
-    runTest("[adf:0]", UrlDetectorOptions.Default);
-    runTest("[:adf]", UrlDetectorOptions.Default);
-    runTest("[]", UrlDetectorOptions.Default);
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "[fe80:aaaa:aaaa:aaaa:3dd0:7f8e:57b7:34d5f]",
+    "[bcad::kkkk:aaaa:3dd0:7f8e:57b7:34d5]",
+    "[:BAD:BEEF:0:8a2e:370:7334",
+    "[:::]",
+    "[lalala:we]",
+    "[:0]",
+    "[:0:]",
+    "::]",
+    "[:",
+    "fe80:22:]3123:[adf]",
+    "[][123[][ae][fae][de][:a][d]aef:E][f",
+    "[]]]:d]",
+    "[fe80:aaaa:aaaa:aaaa:3dd0:7f8e:57b7:34d5:addd:addd:adee]",
+    "[][][]2[d][]][]]]:d][[[:d[e][aee:]af:",
+    "[adf]",
+    "[adf:]",
+    "[adf:0]",
+    "[:adf]",
+    "[]"
+  })
+  void testIpv6BadUrls(String text) {
+    runTest(text, UrlDetectorOptions.Default);
   }
 
   @Test
-  public void testIpv6BadWithGoodUrls() {
+  void testIpv6BadWithGoodUrls() {
     runTest("[:::] [::] [bacd::]", UrlDetectorOptions.Default, "[::]", "[bacd::]");
     runTest("[:0][::]", UrlDetectorOptions.Default, "[::]");
     runTest("[:0:][::afaf]", UrlDetectorOptions.Default, "[::afaf]");
@@ -479,14 +484,14 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testIpv6BadWithGoodUrlsEmbedded() {
+  void testIpv6BadWithGoodUrlsEmbedded() {
     runTest("[fe80:aaaa:aaaa:aaaa:[::]3dd0:7f8e:57b7:34d5f]", UrlDetectorOptions.Default, "[::]");
     runTest("[b[::7f8e]:55]akjef[::]", UrlDetectorOptions.Default, "[::7f8e]:55", "[::]");
     runTest("[bcad::kkkk:aaaa:3dd0[::7f8e]:57b7:34d5]akjef[::]", UrlDetectorOptions.Default, "[::7f8e]:57", "[::]");
   }
 
   @Test
-  public void testIpv6BadWithGoodUrlsWeirder() {
+  void testIpv6BadWithGoodUrlsWeirder() {
     runTest("[:[::]", UrlDetectorOptions.Default, "[::]");
     runTest("[:] [feed::]", UrlDetectorOptions.Default, "[feed::]");
     runTest(":[::feee]:]", UrlDetectorOptions.Default, "[::feee]");
@@ -495,7 +500,7 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testIpv6ConsecutiveGoodUrls() {
+  void testIpv6ConsecutiveGoodUrls() {
     runTest("[::afaf][eaea::][::]", UrlDetectorOptions.Default, "[::afaf]", "[eaea::]", "[::]");
     runTest("[::afaf]www.google.com", UrlDetectorOptions.Default, "[::afaf]", "www.google.com");
     runTest("[lalala:we][::]", UrlDetectorOptions.Default, "[::]");
@@ -504,26 +509,26 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testIpv6BacktrackingUsernamePassword() {
+  void testIpv6BacktrackingUsernamePassword() {
     runTest("check out my url:google.com", UrlDetectorOptions.Default, "google.com");
     runTest("check out my url:[::BAD:DEAD:BEEF:2e80:0:0]", UrlDetectorOptions.Default, "[::BAD:DEAD:BEEF:2e80:0:0]");
     runTest("check out my url:[::BAD:DEAD:BEEF:2e80:0:0] ", UrlDetectorOptions.Default, "[::BAD:DEAD:BEEF:2e80:0:0]");
   }
 
   @Test
-  public void testIpv6BacktrackingEmptyDomainName() {
+  void testIpv6BacktrackingEmptyDomainName() {
     runTest("check out my http:///[::2e80:0:0]", UrlDetectorOptions.Default, "[::2e80:0:0]");
     runTest("check out my http://./[::2e80:0:0]", UrlDetectorOptions.Default, "[::2e80:0:0]");
   }
 
   @Test
-  public void testIpv6DoubleSchemeWithDomain() {
+  void testIpv6DoubleSchemeWithDomain() {
     runTest("http://http://[::2e80:0:0]", UrlDetectorOptions.Default, "http://[::2e80:0:0]");
     runTest("make sure its right here http://http://[::2e80:0:0]", UrlDetectorOptions.Default, "http://[::2e80:0:0]");
   }
 
   @Test
-  public void testIpv6MultipleSchemes() {
+  void testIpv6MultipleSchemes() {
     runTest("http://http://http://[::2e80:0:0]", UrlDetectorOptions.Default, "http://[::2e80:0:0]");
     runTest("make sure its right here http://http://[::2e80:0:0]", UrlDetectorOptions.Default, "http://[::2e80:0:0]");
     runTest("http://ftp://https://[::2e80:0:0]", UrlDetectorOptions.Default, "https://[::2e80:0:0]");
@@ -532,13 +537,13 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testIpv6FtpWithUsernameAndPassword() {
+  void testIpv6FtpWithUsernameAndPassword() {
     runTest("ftp with username is ftp://username:password@[::2e80:0:0]", UrlDetectorOptions.Default,
         "ftp://username:password@[::2e80:0:0]");
   }
 
   @Test
-  public void testIpv6NewLinesAndTabsAreDelimiters() {
+  void testIpv6NewLinesAndTabsAreDelimiters() {
     runTest(
         "Do newlines and tabs break? [::2e80:0:0]/hello/\nworld [::BEEF:ADD:BEEF]\t/stuff/ [AAbb:AAbb:AAbb::]/\thello [::2e80:0:0\u0000]/hello world",
         UrlDetectorOptions.Default,
@@ -547,20 +552,20 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testIpv6WithPort() {
+  void testIpv6WithPort() {
     runTest("http://[AAbb:AAbb:AAbb::]:8080/helloworld", UrlDetectorOptions.Default,
         "http://[AAbb:AAbb:AAbb::]:8080/helloworld");
   }
 
   @Test
-  public void testIpv6BasicHtml() {
+  void testIpv6BasicHtml() {
     runTest(
         "<script type=\"text/javascript\">var a = '[AAbb:AAbb:AAbb::]', b=\"[::bbbb:]\"</script><a href=\"[::cccc:]\">[::ffff:]</a>",
         UrlDetectorOptions.HTML, "[AAbb:AAbb:AAbb::]", "[::bbbb:]", "[::cccc:]", "[::ffff:]");
   }
 
   @Test
-  public void testIpv6LongUrlWithInheritedScheme() {
+  void testIpv6LongUrlWithInheritedScheme() {
     runTest(
         "<link rel=\"stylesheet\" href=\"//[AAbb:AAbb:AAbb::]/en.wikipedia.org/load.php?debug=false&amp;lang=en&amp;modules=ext.gadget.DRN-wizard%2CReferenceTooltips%2Ccharinsert%2Cteahouse%7Cext.wikihiero%7Cmediawiki.legacy.commonPrint%2Cshared%7Cmw.PopUpMediaTransform%7Cskins.vector&amp;only=styles&amp;skin=vector&amp;*\" />",
         UrlDetectorOptions.HTML,
@@ -568,7 +573,7 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testIpv6QuoteMatching() {
+  void testIpv6QuoteMatching() {
     runTest(
         "my website is \"[AAbb:AAbb:AAbb::]\" but my email is \"vshlos@[AAbb:AAbb:AAbb::]\" \" [::AAbb:]\" \" [::] \"www.abc.com\"",
         UrlDetectorOptions.QUOTE_MATCH, "[AAbb:AAbb:AAbb::]", "vshlos@[AAbb:AAbb:AAbb::]", "[::AAbb:]", "[::]",
@@ -576,90 +581,93 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testIpv6IncorrectParsingHtmlWithBadOptions() {
+  void testIpv6IncorrectParsingHtmlWithBadOptions() {
     runTest("<a href=\"http://[::AAbb:]/\">google.com</a>", UrlDetectorOptions.Default,
         "http://[::AAbb:]/\">google.com</a>");
   }
 
   @Test
-  public void testIpv6BracketMatching() {
+  void testIpv6BracketMatching() {
     runTest(
         "MY url ([::AAbb:] ) is very cool. the domain [[::ffff:]] is popular and when written like this {[::BBBe:]} it looks like code",
         UrlDetectorOptions.BRACKET_MATCH, "[::AAbb:]", "[::ffff:]", "[::BBBe:]");
   }
 
   @Test
-  public void testIpv6EmptyPort() {
+  void testIpv6EmptyPort() {
     runTest("http://[::AAbb:]://foo.html", UrlDetectorOptions.Default, "http://[::AAbb:]://foo.html");
     runTest("make sure its right here http://[::AAbb:]://foo.html", UrlDetectorOptions.Default,
         "http://[::AAbb:]://foo.html");
   }
 
   @Test
-  public void testIpv6UrlEncodedColon() {
+  void testIpv6UrlEncodedColon() {
     runTest("http%3A//[::AAbb:]", UrlDetectorOptions.Default, "http%3A//[::AAbb:]");
     runTest("hello http%3A//[::AAbb:]", UrlDetectorOptions.Default, "http%3A//[::AAbb:]");
   }
 
-  @DataProvider
-  public Object[][] getIPv6Ipv4AddressTestStrings() {
-    return new Object[][] {
-        {"[fe80:aaaa:aaaa:aaaa:3dd0:7f8e:192.168.1.1]", "[fe80:aaaa:aaaa:aaaa:3dd0:7f8e:192.168.1.1]"},
-        {"[bcad::aaaa:aaaa:3dd0:7f8e:222.168.1.1]", "[bcad::aaaa:aaaa:3dd0:7f8e:222.168.1.1]"},
-        {"[dead::85a3:0:0:8a2e:192.168.1.1]", "[dead::85a3:0:0:8a2e:192.168.1.1]"},
-        {"[::BEEF:0:8a2e:192.168.1.1]", "[::BEEF:0:8a2e:192.168.1.1]"},
-        {"[:BAD:BEEF:0:8a2e:192.168.1.1]", "192.168.1.1"},
-        {"[::beEE:EeEF:0:8a2e:192.168.1.1]", "[::beEE:EeEF:0:8a2e:192.168.1.1]"},
-        {"[::192.168.1.1]", "[::192.168.1.1]"},
-        {"[0::192.168.1.1]", "[0::192.168.1.1]"},
-        {"[::ffff:192.168.1.1]", "[::ffff:192.168.1.1]"},
-        {"[0::ffff:192.168.1.1]", "[0::ffff:192.168.1.1]"},
-        {"[0:ffff:192.168.1.1::]", "192.168.1.1"}
-    };
+  static Stream<Arguments> getIPv6Ipv4AddressTestStrings() {
+    return Stream.of(
+        arguments("[fe80:aaaa:aaaa:aaaa:3dd0:7f8e:192.168.1.1]", "[fe80:aaaa:aaaa:aaaa:3dd0:7f8e:192.168.1.1]"),
+        arguments("[bcad::aaaa:aaaa:3dd0:7f8e:222.168.1.1]", "[bcad::aaaa:aaaa:3dd0:7f8e:222.168.1.1]"),
+        arguments("[dead::85a3:0:0:8a2e:192.168.1.1]", "[dead::85a3:0:0:8a2e:192.168.1.1]"),
+        arguments("[::BEEF:0:8a2e:192.168.1.1]", "[::BEEF:0:8a2e:192.168.1.1]"),
+        arguments("[:BAD:BEEF:0:8a2e:192.168.1.1]", "192.168.1.1"),
+        arguments("[::beEE:EeEF:0:8a2e:192.168.1.1]", "[::beEE:EeEF:0:8a2e:192.168.1.1]"),
+        arguments("[::192.168.1.1]", "[::192.168.1.1]"),
+        arguments("[0::192.168.1.1]", "[0::192.168.1.1]"),
+        arguments("[::ffff:192.168.1.1]", "[::ffff:192.168.1.1]"),
+        arguments("[0::ffff:192.168.1.1]", "[0::ffff:192.168.1.1]"),
+        arguments("[0:ffff:192.168.1.1::]", "192.168.1.1")
+    );
   }
 
-  @Test(dataProvider = "getIPv6Ipv4AddressTestStrings")
-  public void testIPv6Ipv4Addresses(String testString, String expectedString) {
+  @ParameterizedTest
+  @MethodSource("getIPv6Ipv4AddressTestStrings")
+  void testIPv6Ipv4Addresses(String testString, String expectedString) {
     runTest(testString, UrlDetectorOptions.Default, expectedString);
   }
 
-  @Test(dataProvider = "getIPv6Ipv4AddressTestStrings")
-  public void testIPv6Ipv4AddressesWithSpaces(String testString, String expectedString) {
+  @ParameterizedTest
+  @MethodSource("getIPv6Ipv4AddressTestStrings")
+  void testIPv6Ipv4AddressesWithSpaces(String testString, String expectedString) {
     testString += " ";
     runTest(testString, UrlDetectorOptions.Default, expectedString);
     testString = " " + testString;
     runTest(testString, UrlDetectorOptions.Default, expectedString);
   }
 
-  @DataProvider
-  public Object[][] getHexOctalIpAddresses() {
-    return new Object[][] {
-        {"http://[::ffff:0xC0.0x00.0x02.0xEB]", "%251"},
-        {"http://[::0301.0250.0002.0353]", "%251"},
-        {"http://[0::ffff:0xC0.0x00.0x02.0xEB]", "%223"},
-        {"http://[0::0301.0250.0002.0353]", "%2lalal-a."},
-        {"http://[::bad:ffff:0xC0.0x00.0x02.0xEB]", "%---"},
-        {"http://[::bad:ffff:0301.0250.0002.0353]", "%-.-.-.-....-....--"}
-    };
+  static Stream<Arguments> getHexOctalIpAddresses() {
+    return Stream.of(
+        arguments("http://[::ffff:0xC0.0x00.0x02.0xEB]", "%251"),
+        arguments("http://[::0301.0250.0002.0353]", "%251"),
+        arguments("http://[0::ffff:0xC0.0x00.0x02.0xEB]", "%223"),
+        arguments("http://[0::0301.0250.0002.0353]", "%2lalal-a."),
+        arguments("http://[::bad:ffff:0xC0.0x00.0x02.0xEB]", "%---"),
+        arguments("http://[::bad:ffff:0301.0250.0002.0353]", "%-.-.-.-....-....--")
+    );
   }
 
-  @Test(dataProvider = "getHexOctalIpAddresses")
-  public void testIpv6HexOctalIpAddress(String validUrl, String zoneIndex) {
+  @ParameterizedTest
+  @MethodSource("getHexOctalIpAddresses")
+  void testIpv6HexOctalIpAddress(String validUrl, String zoneIndex) {
     //these are supported by chrome and safari but not firefox;
     //chrome supports without scheme and safari does not without scheme
 
     runTest(validUrl, UrlDetectorOptions.Default, validUrl);
   }
 
-  @Test(dataProvider = "getHexOctalIpAddresses")
-  public void testIpv6ZoneIndices(String address, String zoneIndex) {
+  @ParameterizedTest
+  @MethodSource("getHexOctalIpAddresses")
+  void testIpv6ZoneIndices(String address, String zoneIndex) {
     //these are not supported by common browsers, but earlier versions of firefox do and future versions may support this
     String validUrl = address.substring(0, address.length() - 1) + zoneIndex + ']';
     runTest(validUrl, UrlDetectorOptions.Default, validUrl);
   }
 
-  @Test(dataProvider = "getHexOctalIpAddresses")
-  public void testIpv6ZoneIndicesWithUrlEncodedDots(String address, String zoneIndex) {
+  @ParameterizedTest
+  @MethodSource("getHexOctalIpAddresses")
+  void testIpv6ZoneIndicesWithUrlEncodedDots(String address, String zoneIndex) {
     //these are not supported by common browsers, but earlier versions of firefox do and future versions may support this
     String tmp = address.replace(".", "%2e");
     String validUrl = tmp.substring(0, tmp.length() - 1) + zoneIndex + ']';
@@ -667,7 +675,7 @@ public class TestUriDetection {
   }
 
   @Test
-  public void testBacktrackInvalidUsernamePassword() {
+  void testBacktrackInvalidUsernamePassword() {
     runTest("http://hello:asdf.com", UrlDetectorOptions.Default, "asdf.com");
   }
   
@@ -675,27 +683,30 @@ public class TestUriDetection {
    * https://github.com/linkedin/URL-Detector/issues/12
    */
   @Test
-  public void testIssue12() {
+  void testIssue12() {
     runTest("http://user:pass@host.com host.com", UrlDetectorOptions.Default, "http://user:pass@host.com", "host.com");
   }
 
   /*
    * https://github.com/linkedin/URL-Detector/issues/13
    */
-  @Test
-  public void testIssue13() {
-    runTest("user@github.io/page", UrlDetectorOptions.Default, "user@github.io/page");
-    runTest("name@gmail.com", UrlDetectorOptions.Default, "name@gmail.com");
-    runTest("name.lastname@gmail.com", UrlDetectorOptions.Default, "name.lastname@gmail.com");
-    runTest("gmail.com@gmail.com", UrlDetectorOptions.Default, "gmail.com@gmail.com");
-    runTest("first.middle.reallyreallyreallyreallyreallyreallyreallyreallyreallyreallylonglastname@gmail.com", UrlDetectorOptions.Default, "first.middle.reallyreallyreallyreallyreallyreallyreallyreallyreallyreallylonglastname@gmail.com");
+  @ParameterizedTest
+  @CsvSource({
+    "user@github.io/page, user@github.io/page",
+    "name@gmail.com, name@gmail.com",
+    "name.lastname@gmail.com, name.lastname@gmail.com",
+    "gmail.com@gmail.com, gmail.com@gmail.com",
+    "first.middle.reallyreallyreallyreallyreallyreallyreallyreallyreallyreallylonglastname@gmail.com, first.middle.reallyreallyreallyreallyreallyreallyreallyreallyreallyreallylonglastname@gmail.com"
+  })
+  void testIssue13(String text, String expected) {
+    runTest(text, UrlDetectorOptions.Default, expected);
   }
   
   /*
    * https://github.com/linkedin/URL-Detector/issues/15
    */
   @Test
-  public void testIssue15() {
+  void testIssue15() {
     runTest(".............:::::::::::;;;;;;;;;;;;;;;::...............................................:::::::::::::::::::::::::::::....................", UrlDetectorOptions.Default);
   }
 
@@ -703,7 +714,7 @@ public class TestUriDetection {
    * https://github.com/linkedin/URL-Detector/issues/16
    */
   @Test
-  public void testIssue16() {
+  void testIssue16() {
     runTest("://VIVE MARINE LE PEN//:@.", UrlDetectorOptions.Default);
   }
 
@@ -711,46 +722,45 @@ public class TestUriDetection {
    * https://github.com/URL-Detector/URL-Detector/issues/5
    */
   @Test
-  private void testDalesKillerString3() {
+  void testDalesKillerString3() {
     // kills loop in UrlDetector.readDefault()  
     runTest(" :u ", UrlDetectorOptions.ALLOW_SINGLE_LEVEL_DOMAIN);
   }
-  
-  @DataProvider
-  private Object[][] getUrlsForSchemaDetectionInHtml() {
+
+  static Stream<Arguments> getUrlsForSchemaDetectionInHtml() {
     String domain = "linkedin.com";
     return Stream.of("http://", "https://", "ftp://", "ftps://", "http%3a//", "https%3a//", "ftp%3a//", "ftps%3a//")
       .map(validScheme -> new Object[][]{
-        {"<a href=https://" + domain + ">link</a>", "https://" + domain},
-        {"<a href=\"https://" + domain + "\">link</a>", "https://" + domain},
-      }).flatMap(Arrays::stream)
-      .toArray(Object[][]::new);
+        {"<a href=" + validScheme + domain + ">link</a>", validScheme + domain},
+        {"<a href=\"" + validScheme + domain + "\">link</a>", validScheme + domain},
+      })
+      .flatMap(Arrays::stream)
+      .map(Arguments::of);
   }
 
-  @Test(dataProvider = "getUrlsForSchemaDetectionInHtml")
-  public void testSchemaDetectionInHtml(String text, String expected) {
+  @ParameterizedTest
+  @MethodSource("getUrlsForSchemaDetectionInHtml")
+  void testSchemaDetectionInHtml(String text, String expected) {
     runTest(text, UrlDetectorOptions.HTML, expected);
   }
 
   @Test
-  public void testColonWithoutSlashes() {
+  void testColonWithoutSlashes() {
     UrlDetector parser = new UrlDetector("ftp:example.com", UrlDetectorOptions.ALLOW_COLON_WITHOUT_SLASHES);
     List<Url> found = parser.detect();
-    String[] foundArray = new String[found.size()];
-    for (int i = 0; i < foundArray.length; i++) {
-      Assert.assertEquals(found.get(i).getScheme(), "ftp"); // Should be detected as if it was ftp://
-      Assert.assertEquals(found.get(i).getHost(), "example.com");
+    for (Url url : found) {
+      assertEquals(url.getScheme(), "ftp"); // Should be detected as if it was ftp://
+      assertEquals(url.getHost(), "example.com");
     }
   }
 
   @Test
-  public void testColonWithoutSlashesFail() {
+  void testColonWithoutSlashesFail() {
     UrlDetector parser = new UrlDetector("ftp:example.com", UrlDetectorOptions.Default);
     List<Url> found = parser.detect();
-    String[] foundArray = new String[found.size()];
-    for (int i = 0; i < foundArray.length; i++) {
-      Assert.assertEquals(found.get(i).getScheme(), "http"); // Should be detected as a username now and set to default http://
-      Assert.assertEquals(found.get(i).getHost(), "example.com");
+    for (Url url : found) {
+      assertEquals(url.getScheme(), "http"); // Should be detected as a username now and set to default http://
+      assertEquals(url.getHost(), "example.com");
     }
   }
 
@@ -763,7 +773,7 @@ public class TestUriDetection {
       foundArray[i] = found.get(i).getOriginalUrl();
     }
 
-    Assert.assertEqualsNoOrder(foundArray, expected);
+    assertThat(foundArray, Matchers.arrayContainingInAnyOrder(expected));
   }
   
 }

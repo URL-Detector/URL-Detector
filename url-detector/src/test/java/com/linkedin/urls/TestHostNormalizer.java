@@ -9,41 +9,41 @@
  */
 package com.linkedin.urls;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Arrays;
-import org.testng.Assert;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
+
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 
-public class TestHostNormalizer {
+class TestHostNormalizer {
 
-  @DataProvider
-  private Object[][] getIPAddresses() {
-    return new Object[][] {
-        {"[fefe::]", "[fefe:0:0:0:0:0:0:0]"},
-        {"[::ffff]", "[0:0:0:0:0:0:0:ffff]"},
-        {"[::255.255.255.255]", "[0:0:0:0:0:0:ffff:ffff]"},
-        {"[::]", "[0:0:0:0:0:0:0:0]"},
-        {"[::1]", "[0:0:0:0:0:0:0:1]"},
-        {"[aAaA::56.7.7.5]", "[aaaa:0:0:0:0:0:3807:705]"},
-        {"[BBBB:ab:f78F:f:DDDD:bab:56.7.7.5]", "[bbbb:ab:f78f:f:dddd:bab:3807:705]"},
-        {"[Aaaa::1]", "[aaaa:0:0:0:0:0:0:1]"},
-        {"[::192.167.2.2]", "[0:0:0:0:0:0:c0a7:202]"},
-        {"[0:ffff::077.0x22.222.11]", "[0:ffff:0:0:0:0:3f22:de0b]"},
-        {"[0::ffff:077.0x22.222.11]", "63.34.222.11"},
-        {"192.168.1.1", "192.168.1.1"},
-        {"0x92.168.1.1", "146.168.1.1"},
-        {"3279880203", "195.127.0.11"}
-    };
-  }
-
-  @Test(dataProvider = "getIPAddresses")
-  public void testIpHostNormalizationAndGetBytes(String original, String expectedHost) throws UnknownHostException {
+  @ParameterizedTest
+  @CsvSource({
+    "[fefe::],                           [fefe:0:0:0:0:0:0:0]",
+    "[::ffff],                           [0:0:0:0:0:0:0:ffff]",
+    "[::255.255.255.255],                [0:0:0:0:0:0:ffff:ffff]",
+    "[::],                               [0:0:0:0:0:0:0:0]",
+    "[::1],                              [0:0:0:0:0:0:0:1]",
+    "[aAaA::56.7.7.5],                   [aaaa:0:0:0:0:0:3807:705]",
+    "[BBBB:ab:f78F:f:DDDD:bab:56.7.7.5], [bbbb:ab:f78f:f:dddd:bab:3807:705]",
+    "[Aaaa::1],                          [aaaa:0:0:0:0:0:0:1]",
+    "[::192.167.2.2],                    [0:0:0:0:0:0:c0a7:202]",
+    "[0:ffff::077.0x22.222.11],          [0:ffff:0:0:0:0:3f22:de0b]",
+    "[0::ffff:077.0x22.222.11],          63.34.222.11",
+    "192.168.1.1,                        192.168.1.1",
+    "0x92.168.1.1,                       146.168.1.1",
+    "3279880203,                         195.127.0.11"
+  })
+  void testIpHostNormalizationAndGetBytes(String original, String expectedHost) throws UnknownHostException {
     HostNormalizer hostNormalizer = new HostNormalizer(original);
-    Assert.assertEquals(hostNormalizer.getNormalizedHost(), expectedHost);
+    assertEquals(hostNormalizer.getNormalizedHost(), expectedHost);
 
     InetAddress address = InetAddress.getByName(expectedHost);
     byte[] expectedBytes;
@@ -55,25 +55,21 @@ public class TestHostNormalizer {
     } else {
       expectedBytes = address.getAddress();
     }
-    Assert.assertTrue(Arrays.equals(hostNormalizer.getBytes(), expectedBytes));
+    assertArrayEquals(hostNormalizer.getBytes(), expectedBytes);
   }
 
-  @DataProvider
-  private Object[][] getNormalHosts() {
-    return new Object[][] {
-        {"sALes.com"},
-        {"33r.nEt"},
-        {"173839.com"},
-        {"192.168.-3.1"},
-        {"[::-34:50]"},
-        {"[-34::192.168.34.-3]"}
-    };
-  }
-
-  @Test(dataProvider = "getNormalHosts")
-  public void testSanityAddresses(String host) {
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "sALes.com",
+    "33r.nEt",
+    "173839.com",
+    "192.168.-3.1",
+    "[::-34:50]",
+    "[-34::192.168.34.-3]"
+  })
+  void testSanityAddresses(String host) {
     HostNormalizer hostNormalizer = new HostNormalizer(host);
-    Assert.assertEquals(hostNormalizer.getNormalizedHost(), host.toLowerCase());
-    Assert.assertNull(hostNormalizer.getBytes());
+    assertEquals(hostNormalizer.getNormalizedHost(), host.toLowerCase());
+    assertNull(hostNormalizer.getBytes());
   }
 }
