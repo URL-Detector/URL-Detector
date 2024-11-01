@@ -88,12 +88,15 @@ This library was written by the security team and Linkedin when other options di
 * Yulia Astakhova (jastakho@linkedin.com)
 
 ---
-## Third Party Dependencies
+## Third Party Test Dependencies
 
-### TestNG
-* http://testng.org/
-* Copyright © 2004-2014 Cédric Beust
-* License: Apache 2.0
+### JUnit
+* Copyright © 2015-2024 [The JUnit Team](https://junit.org/)
+* License: EPL-2.0
+
+### Hamcrest
+* Copyright © 2000-2024 www.hamcrest.org
+* License: BSD 3-Clause
 
 ---
 ## License

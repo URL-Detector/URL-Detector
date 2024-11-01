@@ -9,54 +9,57 @@
  */
 package com.linkedin.urls.detection;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Test;
 
 
-public class TestInputTextReader {
+class TestInputTextReader {
   private static final String CONTENT = "HELLO WORLD";
 
   @Test
-  public void testSimpleRead() {
+  void testSimpleRead() {
     InputTextReader reader = new InputTextReader(CONTENT);
     for (int i = 0; i < CONTENT.length(); i++) {
-      Assert.assertEquals(reader.read(), CONTENT.charAt(i));
+      assertEquals(reader.read(), CONTENT.charAt(i));
     }
   }
 
   @Test
-  public void testEOF() {
+  void testEOF() {
     InputTextReader reader = new InputTextReader(CONTENT);
     for (int i = 0; i < CONTENT.length() - 1; i++) {
       reader.read();
     }
 
-    Assert.assertFalse(reader.eof());
+    assertFalse(reader.eof());
     reader.read();
-    Assert.assertTrue(reader.eof());
+    assertTrue(reader.eof());
   }
 
   @Test
-  public void testGoBack() {
+  void testGoBack() {
     InputTextReader reader = new InputTextReader(CONTENT);
-    Assert.assertEquals(reader.read(), CONTENT.charAt(0));
+    assertEquals(reader.read(), CONTENT.charAt(0));
     reader.goBack();
-    Assert.assertEquals(reader.read(), CONTENT.charAt(0));
-    Assert.assertEquals(reader.read(), CONTENT.charAt(1));
-    Assert.assertEquals(reader.read(), CONTENT.charAt(2));
+    assertEquals(reader.read(), CONTENT.charAt(0));
+    assertEquals(reader.read(), CONTENT.charAt(1));
+    assertEquals(reader.read(), CONTENT.charAt(2));
     reader.goBack();
     reader.goBack();
-    Assert.assertEquals(reader.read(), CONTENT.charAt(1));
-    Assert.assertEquals(reader.read(), CONTENT.charAt(2));
+    assertEquals(reader.read(), CONTENT.charAt(1));
+    assertEquals(reader.read(), CONTENT.charAt(2));
   }
 
   @Test
-  public void testSeek() {
+  void testSeek() {
     InputTextReader reader = new InputTextReader(CONTENT);
     reader.seek(4);
-    Assert.assertEquals(reader.read(), CONTENT.charAt(4));
+    assertEquals(reader.read(), CONTENT.charAt(4));
 
     reader.seek(1);
-    Assert.assertEquals(reader.read(), CONTENT.charAt(1));
+    assertEquals(reader.read(), CONTENT.charAt(1));
   }
 }

@@ -1,26 +1,22 @@
 subprojects {
+  apply plugin: 'java'
+  apply plugin: 'idea'
+
   repositories {
     mavenCentral()
   }
 
-  project.buildDir = new File(project.rootProject.buildDir, project.name)
+  project.layout.buildDirectory = project.rootProject.layout.buildDirectory.dir(project.name).get()
 
-  plugins.withType(JavaPlugin) {
-
-    dependencies {
-      testImplementation "org.testng:testng:6.1.1"
-    }
-
-    test {
-      afterSuite { desc, result ->
-        if (!desc.parent) {
-          println ":${project.name} -- Executed ${result.testCount} tests: ${result.successfulTestCount} succeeded, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped"
-        }
+  plugins.withType(JavaPlugin).configureEach {
+      dependencies {
+        testImplementation platform('org.junit:junit-bom:5.11.3')
+        testImplementation 'org.junit.jupiter:junit-jupiter'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+        testImplementation 'org.hamcrest:hamcrest:3.0'
+      }
+      test {
+        useJUnitPlatform()
       }
     }
-
-    test.useTestNG() {
-      excludeGroups 'integration'
-    }
-  }
 }
