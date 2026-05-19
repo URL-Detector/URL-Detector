@@ -2,7 +2,7 @@
  * Copyright 2015 LinkedIn Corp. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *
@@ -192,7 +192,7 @@ public class DomainNameReader {
    * @param characterHandler The handler to call on each non-matching character to count matching quotes and stuff.
    */
   public DomainNameReader(InputTextReader reader, StringBuilder buffer, String current, UrlDetectorOptions options,
-                          CharacterHandler characterHandler) {
+      CharacterHandler characterHandler) {
     _buffer = buffer;
     _current = current;
     _reader = reader;
@@ -250,7 +250,7 @@ public class DomainNameReader {
           _seenBracket = true;
           _numeric = false;
         } else if (curr == '%' && index + 2 < length && CharUtils.isHex(currArray[index + 1])
-          && CharUtils.isHex(currArray[index + 2])) {
+            && CharUtils.isHex(currArray[index + 2])) {
           //handle url encoded dot
           if (currArray[index + 1] == '2' && currArray[index + 2] == 'e') {
             _dots++;
@@ -356,7 +356,7 @@ public class DomainNameReader {
         _reader.goBack();
         return ReaderNextState.ReadUserPass;
       } else if (CharUtils.isDot(curr)
-        || (curr == '%' && _reader.canReadChars(2) && _reader.peek(2).equalsIgnoreCase(HEX_ENCODED_DOT))) {
+          || (curr == '%' && _reader.canReadChars(2) && _reader.peek(2).equalsIgnoreCase(HEX_ENCODED_DOT))) {
         //if the current character is a dot or a urlEncodedDot
 
         //handles the case: hello..
@@ -385,7 +385,7 @@ public class DomainNameReader {
           }
         }
       } else if (_seenBracket && (CharUtils.isHex(curr) || curr == ':' || curr == '[' || curr == ']' || curr == '%')
-        && !_seenCompleteBracketSet) { //if this is an ipv6 address.
+          && !_seenCompleteBracketSet) { //if this is an ipv6 address.
         switch (curr) {
           case ':':
             _currentLabelLength = 0;
@@ -435,7 +435,7 @@ public class DomainNameReader {
         _reader.goBack();
         done = true;
       } else if (curr == '%' && _reader.canReadChars(2) && CharUtils.isHex(_reader.peekChar(0))
-        && CharUtils.isHex(_reader.peekChar(1))) {
+          && CharUtils.isHex(_reader.peekChar(1))) {
         //append to the states.
         _buffer.append(curr);
         _buffer.append(_reader.read());
@@ -472,7 +472,7 @@ public class DomainNameReader {
     //If the _currentLabelLength is not 0 then the last "." is not included so add it.
     //Same with number of labels (or dots including the last)
     int lastDotLength =
-      _buffer.length() > 3 && _buffer.substring(_buffer.length() - 3).equalsIgnoreCase("%" + HEX_ENCODED_DOT) ? 3 : 1;
+        _buffer.length() > 3 && _buffer.substring(_buffer.length() - 3).equalsIgnoreCase("%" + HEX_ENCODED_DOT) ? 3 : 1;
 
     int domainLength = _buffer.length() - _startDomainName + (_currentLabelLength > 0 ? lastDotLength : 0);
     int dotCount = _dots + (_currentLabelLength > 0 ? 1 : 0);
@@ -485,7 +485,7 @@ public class DomainNameReader {
       String testDomain = _buffer.substring(_startDomainName).toLowerCase();
       valid = isValidIpv6(testDomain);
     } else if ((_currentLabelLength > 0 && _dots >= 1) || (_dots >= 2 && _currentLabelLength == 0)
-      || (_options.hasFlag(UrlDetectorOptions.ALLOW_SINGLE_LEVEL_DOMAIN) && _dots == 0)) {
+        || (_options.hasFlag(UrlDetectorOptions.ALLOW_SINGLE_LEVEL_DOMAIN) && _dots == 0)) {
 
       int topStart = _buffer.length() - _topLevelLength;
       if (_currentLabelLength == 0) {
@@ -498,7 +498,7 @@ public class DomainNameReader {
 
       //There is no size restriction if the top level domain is international (starts with "xn--")
       valid =
-        ((topLevelStart.equalsIgnoreCase("xn--") || (_topLevelLength >= MIN_TOP_LEVEL_DOMAIN && _topLevelLength <= MAX_TOP_LEVEL_DOMAIN)));
+          ((topLevelStart.equalsIgnoreCase("xn--") || (_topLevelLength >= MIN_TOP_LEVEL_DOMAIN && _topLevelLength <= MAX_TOP_LEVEL_DOMAIN)));
     }
 
     if (valid) {
@@ -515,24 +515,6 @@ public class DomainNameReader {
 
     //return invalid state.
     return ReaderNextState.InvalidDomainName;
-  }
-
-  private static long parseLongSafe(String s, int startIndex, int base, long maxValue) {
-    if (startIndex >= s.length()) {
-      return 0;
-    }
-    long result = 0;
-    for (int i = startIndex; i < s.length(); i++) {
-      int digit = Character.digit(s.charAt(i), base);
-      if (digit < 0) {
-        return maxValue + 1;
-      }
-      result = result * base + digit;
-      if (result > maxValue) {
-        return maxValue + 1;
-      }
-    }
-    return result;
   }
 
   /**
@@ -603,7 +585,7 @@ public class DomainNameReader {
     // or if we only have '[]'
     // or if we detect [:8000: ...]; only [::8000: ...] is okay
     if (domainArray.length < 3 || domainArray[domainArray.length - 1] != ']' || domainArray[0] != '['
-      || domainArray[1] == ':' && domainArray[2] != ':') {
+        || domainArray[1] == ':' && domainArray[2] != ':') {
       return false;
     }
 
@@ -688,5 +670,23 @@ public class DomainNameReader {
     //numSections != 1 checks for things like: [adf]
     //If there are more than 8 sections for the address or there isn't a double colon, then it's invalid.
     return numSections != 1 && (numSections >= 8 || doubleColonFlag);
+  }
+
+  private static long parseLongSafe(String s, int startIndex, int base, long maxValue) {
+    if (startIndex >= s.length()) {
+      return 0;
+    }
+    long result = 0;
+    for (int i = startIndex; i < s.length(); i++) {
+      int digit = Character.digit(s.charAt(i), base);
+      if (digit < 0) {
+        return maxValue + 1;
+      }
+      result = result * base + digit;
+      if (result > maxValue) {
+        return maxValue + 1;
+      }
+    }
+    return result;
   }
 }
