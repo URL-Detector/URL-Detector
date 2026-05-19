@@ -2,7 +2,7 @@
  * Copyright 2015 LinkedIn Corp. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *
@@ -75,6 +75,7 @@ public class DomainNameReader {
    */
   private static final String HEX_ENCODED_DOT = "2e";
 
+
   /**
    * This is the final return state of reading a domain name.
    */
@@ -109,13 +110,17 @@ public class DomainNameReader {
     ReadUserPass
   }
 
+
   /**
    * The interface that gets called for each character that's non-matching (to a valid domain name character) in to count
    * the matching quotes and parenthesis correctly.
    */
   interface CharacterHandler {
+
     void addCharacter(char character);
+
   }
+
 
   /**
    * The currently written string buffer.
@@ -185,14 +190,15 @@ public class DomainNameReader {
 
   /**
    * Creates a new instance of the DomainNameReader object.
-   * @param reader The input stream to read.
-   * @param buffer The string buffer to use for storing a domain name.
-   * @param current The current string that was thought to be a domain name.
-   * @param options The detector options of this reader.
+   *
+   * @param reader           The input stream to read.
+   * @param buffer           The string buffer to use for storing a domain name.
+   * @param current          The current string that was thought to be a domain name.
+   * @param options          The detector options of this reader.
    * @param characterHandler The handler to call on each non-matching character to count matching quotes and stuff.
    */
   public DomainNameReader(InputTextReader reader, StringBuilder buffer, String current, UrlDetectorOptions options,
-      CharacterHandler characterHandler) {
+                          CharacterHandler characterHandler) {
     _buffer = buffer;
     _current = current;
     _reader = reader;
@@ -203,6 +209,7 @@ public class DomainNameReader {
   /**
    * Reads and parses the current string to make sure the domain name started where it was supposed to,
    * and the current domain name is correct.
+   *
    * @return The next state to use after reading the current.
    */
   private ReaderNextState readCurrent() {
@@ -250,7 +257,7 @@ public class DomainNameReader {
           _seenBracket = true;
           _numeric = false;
         } else if (curr == '%' && index + 2 < length && CharUtils.isHex(currArray[index + 1])
-            && CharUtils.isHex(currArray[index + 2])) {
+          && CharUtils.isHex(currArray[index + 2])) {
           //handle url encoded dot
           if (currArray[index + 1] == '2' && currArray[index + 2] == 'e') {
             _dots++;
@@ -309,6 +316,7 @@ public class DomainNameReader {
   /**
    * Reads the Dns and returns the next state the state machine should take in throwing this out, or continue processing
    * if this is a valid domain name.
+   *
    * @return The next state to take.
    */
   public ReaderNextState readDomainName() {
@@ -356,7 +364,7 @@ public class DomainNameReader {
         _reader.goBack();
         return ReaderNextState.ReadUserPass;
       } else if (CharUtils.isDot(curr)
-          || (curr == '%' && _reader.canReadChars(2) && _reader.peek(2).equalsIgnoreCase(HEX_ENCODED_DOT))) {
+        || (curr == '%' && _reader.canReadChars(2) && _reader.peek(2).equalsIgnoreCase(HEX_ENCODED_DOT))) {
         //if the current character is a dot or a urlEncodedDot
 
         //handles the case: hello..
@@ -385,7 +393,7 @@ public class DomainNameReader {
           }
         }
       } else if (_seenBracket && (CharUtils.isHex(curr) || curr == ':' || curr == '[' || curr == ']' || curr == '%')
-          && !_seenCompleteBracketSet) { //if this is an ipv6 address.
+        && !_seenCompleteBracketSet) { //if this is an ipv6 address.
         switch (curr) {
           case ':':
             _currentLabelLength = 0;
@@ -435,7 +443,7 @@ public class DomainNameReader {
         _reader.goBack();
         done = true;
       } else if (curr == '%' && _reader.canReadChars(2) && CharUtils.isHex(_reader.peekChar(0))
-          && CharUtils.isHex(_reader.peekChar(1))) {
+        && CharUtils.isHex(_reader.peekChar(1))) {
         //append to the states.
         _buffer.append(curr);
         _buffer.append(_reader.read());
@@ -459,8 +467,10 @@ public class DomainNameReader {
    * Checks the current state of this object and returns if the valid state indicates that the
    * object has a valid domain name. If it does, it will return append the last character
    * and return the validState specified.
+   *
    * @param validState The state to return if this check indicates that the dns is ok.
-   * @param lastChar The last character to add if the domain is ok.
+   * @param lastChar   The last character to add if the domain is ok.
+   *
    * @return The validState if the domain is valid, else ReaderNextState.InvalidDomainName
    */
   private ReaderNextState checkDomainNameValid(ReaderNextState validState, Character lastChar) {
@@ -472,7 +482,7 @@ public class DomainNameReader {
     //If the _currentLabelLength is not 0 then the last "." is not included so add it.
     //Same with number of labels (or dots including the last)
     int lastDotLength =
-        _buffer.length() > 3 && _buffer.substring(_buffer.length() - 3).equalsIgnoreCase("%" + HEX_ENCODED_DOT) ? 3 : 1;
+      _buffer.length() > 3 && _buffer.substring(_buffer.length() - 3).equalsIgnoreCase("%" + HEX_ENCODED_DOT) ? 3 : 1;
 
     int domainLength = _buffer.length() - _startDomainName + (_currentLabelLength > 0 ? lastDotLength : 0);
     int dotCount = _dots + (_currentLabelLength > 0 ? 1 : 0);
@@ -485,7 +495,7 @@ public class DomainNameReader {
       String testDomain = _buffer.substring(_startDomainName).toLowerCase();
       valid = isValidIpv6(testDomain);
     } else if ((_currentLabelLength > 0 && _dots >= 1) || (_dots >= 2 && _currentLabelLength == 0)
-        || (_options.hasFlag(UrlDetectorOptions.ALLOW_SINGLE_LEVEL_DOMAIN) && _dots == 0)) {
+      || (_options.hasFlag(UrlDetectorOptions.ALLOW_SINGLE_LEVEL_DOMAIN) && _dots == 0)) {
 
       int topStart = _buffer.length() - _topLevelLength;
       if (_currentLabelLength == 0) {
@@ -498,7 +508,7 @@ public class DomainNameReader {
 
       //There is no size restriction if the top level domain is international (starts with "xn--")
       valid =
-          ((topLevelStart.equalsIgnoreCase("xn--") || (_topLevelLength >= MIN_TOP_LEVEL_DOMAIN && _topLevelLength <= MAX_TOP_LEVEL_DOMAIN)));
+        ((topLevelStart.equalsIgnoreCase("xn--") || (_topLevelLength >= MIN_TOP_LEVEL_DOMAIN && _topLevelLength <= MAX_TOP_LEVEL_DOMAIN)));
     }
 
     if (valid) {
@@ -517,9 +527,29 @@ public class DomainNameReader {
     return ReaderNextState.InvalidDomainName;
   }
 
+  private static long parseLongSafe(String s, int startIndex, int base, long maxValue) {
+    if (startIndex >= s.length()) {
+      return 0;
+    }
+    long result = 0;
+    for (int i = startIndex; i < s.length(); i++) {
+      int digit = Character.digit(s.charAt(i), base);
+      if (digit < 0) {
+        return maxValue + 1;
+      }
+      result = result * base + digit;
+      if (result > maxValue) {
+        return maxValue + 1;
+      }
+    }
+    return result;
+  }
+
   /**
    * Handles Hexadecimal, octal, decimal, dotted decimal, dotted hex, dotted octal.
+   *
    * @param testDomain the string we're testing
+   *
    * @return Returns true if it's a valid ipv4 address
    */
   private boolean isValidIpv4(String testDomain) {
@@ -528,40 +558,15 @@ public class DomainNameReader {
     if (length > 0) {
       //handling format without dots. Ex: http://2123123123123/path/a, http://0x8242343/aksdjf
       if (_dots == 0) {
-        try {
-          long value;
-          if (length > 2 && testDomain.charAt(0) == '0' && testDomain.charAt(1) == 'x') { //hex
-            // digit must be within ['0', '9'] or ['A', 'F'] or ['a', 'f']
-            for (int c = 2; c < length; c++) {
-              char d = testDomain.charAt(c);
-              if ((d < '0' || (d > '9' && d < 'A') || (d > 'F' && d < 'a') || d > 'f')) {
-                return false;
-              }
-            }
-            value = Long.parseLong(testDomain.substring(2), 16);
-          } else if (testDomain.charAt(0) == '0') { //octal
-            // digit must be within ['0', '7']
-            for (int c = 1; c < length; c++) {
-              char d = testDomain.charAt(c);
-              if (d < '0' || d > '7') {
-                return false;
-              }
-            }
-            value = Long.parseLong(testDomain.substring(1), 8);
-          } else { //decimal
-            // digit must be within ['0', '9']
-            for (int c = 0; c < length; c++) {
-              char d = testDomain.charAt(c);
-              if (d < '0' || d > '9') {
-                return false;
-              }
-            }
-            value = Long.parseLong(testDomain);
-          }
-          valid = value <= MAX_NUMERIC_DOMAIN_VALUE && value >= MIN_NUMERIC_DOMAIN_VALUE;
-        } catch (NumberFormatException e) {
-          valid = false;
+        long value;
+        if (length > 2 && testDomain.charAt(0) == '0' && testDomain.charAt(1) == 'x') { //hex
+          value = parseLongSafe(testDomain, 2, 16, MAX_NUMERIC_DOMAIN_VALUE);
+        } else if (testDomain.charAt(0) == '0') { //octal
+          value = parseLongSafe(testDomain, 1, 8, MAX_NUMERIC_DOMAIN_VALUE);
+        } else { //decimal
+          value = parseLongSafe(testDomain, 0, 10, MAX_NUMERIC_DOMAIN_VALUE);
         }
+        valid = value <= MAX_NUMERIC_DOMAIN_VALUE && value >= MIN_NUMERIC_DOMAIN_VALUE;
       } else if (_dots == 3) {
         //Dotted decimal/hex/octal format
         String[] parts = CharUtils.splitByDot(testDomain);
@@ -572,50 +577,20 @@ public class DomainNameReader {
           String part = parts[i];
           int partLen = part.length();
           if (partLen > 0) {
-            String parsedNum;
+            int startIndex;
             int base;
             if (partLen > 2 && part.charAt(0) == '0' && part.charAt(1) == 'x') { //dotted hex
-              // digit must be within ['0', '9'] or ['A', 'F'] or ['a', 'f']
-              for (int c = 2; c < partLen; c++) {
-                char d = part.charAt(c);
-                if ((d < '0' || (d > '9' && d < 'A') || (d > 'F' && d < 'a') || d > 'f')) {
-                  return false;
-                }
-              }
-              parsedNum = part.substring(2);
+              startIndex = 2;
               base = 16;
             } else if (part.charAt(0) == '0') { //dotted octal
-              // digit must be within ['0', '7']
-              for (int c = 1; c < partLen; c++) {
-                char d = part.charAt(c);
-                if (d < '0' || d > '7') {
-                  return false;
-                }
-              }
-              parsedNum = part.substring(1);
+              startIndex = 1;
               base = 8;
             } else { //dotted decimal
-              // digit must be within ['0', '9']
-              for (int c = 0; c < partLen; c++) {
-                char d = part.charAt(c);
-                if (d < '0' || d > '9') {
-                  return false;
-                }
-              }
-              parsedNum = part;
+              startIndex = 0;
               base = 10;
             }
 
-            Integer section;
-            if (parsedNum.length() == 0) {
-              section = 0;
-            } else {
-              try {
-                section = Integer.parseInt(parsedNum, base);
-              } catch (NumberFormatException e) {
-                return false;
-              }
-            }
+            long section = parseLongSafe(part, startIndex, base, MAX_IP_PART);
             if (section < MIN_IP_PART || section > MAX_IP_PART) {
               valid = false;
             }
@@ -631,6 +606,7 @@ public class DomainNameReader {
   /**
    * Sees that there's an open "[", and is now checking for ":"'s and stopping when there is a ']' or invalid character.
    * Handles ipv4 formatted ipv6 addresses, zone indices, truncated notation.
+   *
    * @return Returns true if it is a valid ipv6 address
    */
   private boolean isValidIpv6(String testDomain) {
@@ -640,7 +616,7 @@ public class DomainNameReader {
     // or if we only have '[]'
     // or if we detect [:8000: ...]; only [::8000: ...] is okay
     if (domainArray.length < 3 || domainArray[domainArray.length - 1] != ']' || domainArray[0] != '['
-        || domainArray[1] == ':' && domainArray[2] != ':') {
+      || domainArray[1] == ':' && domainArray[2] != ':') {
       return false;
     }
 

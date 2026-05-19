@@ -411,6 +411,14 @@ class TestUriDetection {
   }
 
   @Test
+  void detect_should_rejectInvalidIpv4_when_octetOverflowsInteger() {
+    runTest("http://9999999999.1.1.1/path", UrlDetectorOptions.Default);
+    runTest("http://1.9999999999.1.1/path", UrlDetectorOptions.Default);
+    runTest("http://0x1FFFFFFFF.0.0.1/path", UrlDetectorOptions.Default);
+    runTest("http://077777777777.0.0.0/path", UrlDetectorOptions.Default);
+  }
+
+  @Test
   void testIPv4EncodedDot() {
     runTest("hello 192%2e168%2e1%2e1", UrlDetectorOptions.Default, "192%2e168%2e1%2e1");
     runTest("hello 192.168%2e1%2e1/lalala", UrlDetectorOptions.Default, "192.168%2e1%2e1/lalala");
