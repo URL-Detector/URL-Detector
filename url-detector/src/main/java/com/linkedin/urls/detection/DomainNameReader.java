@@ -2,7 +2,7 @@
  * Copyright 2015 LinkedIn Corp. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *
@@ -75,7 +75,6 @@ public class DomainNameReader {
    */
   private static final String HEX_ENCODED_DOT = "2e";
 
-
   /**
    * This is the final return state of reading a domain name.
    */
@@ -110,17 +109,13 @@ public class DomainNameReader {
     ReadUserPass
   }
 
-
   /**
    * The interface that gets called for each character that's non-matching (to a valid domain name character) in to count
    * the matching quotes and parenthesis correctly.
    */
   interface CharacterHandler {
-
     void addCharacter(char character);
-
   }
-
 
   /**
    * The currently written string buffer.
@@ -190,11 +185,10 @@ public class DomainNameReader {
 
   /**
    * Creates a new instance of the DomainNameReader object.
-   *
-   * @param reader           The input stream to read.
-   * @param buffer           The string buffer to use for storing a domain name.
-   * @param current          The current string that was thought to be a domain name.
-   * @param options          The detector options of this reader.
+   * @param reader The input stream to read.
+   * @param buffer The string buffer to use for storing a domain name.
+   * @param current The current string that was thought to be a domain name.
+   * @param options The detector options of this reader.
    * @param characterHandler The handler to call on each non-matching character to count matching quotes and stuff.
    */
   public DomainNameReader(InputTextReader reader, StringBuilder buffer, String current, UrlDetectorOptions options,
@@ -209,7 +203,6 @@ public class DomainNameReader {
   /**
    * Reads and parses the current string to make sure the domain name started where it was supposed to,
    * and the current domain name is correct.
-   *
    * @return The next state to use after reading the current.
    */
   private ReaderNextState readCurrent() {
@@ -316,7 +309,6 @@ public class DomainNameReader {
   /**
    * Reads the Dns and returns the next state the state machine should take in throwing this out, or continue processing
    * if this is a valid domain name.
-   *
    * @return The next state to take.
    */
   public ReaderNextState readDomainName() {
@@ -467,10 +459,8 @@ public class DomainNameReader {
    * Checks the current state of this object and returns if the valid state indicates that the
    * object has a valid domain name. If it does, it will return append the last character
    * and return the validState specified.
-   *
    * @param validState The state to return if this check indicates that the dns is ok.
-   * @param lastChar   The last character to add if the domain is ok.
-   *
+   * @param lastChar The last character to add if the domain is ok.
    * @return The validState if the domain is valid, else ReaderNextState.InvalidDomainName
    */
   private ReaderNextState checkDomainNameValid(ReaderNextState validState, Character lastChar) {
@@ -547,9 +537,7 @@ public class DomainNameReader {
 
   /**
    * Handles Hexadecimal, octal, decimal, dotted decimal, dotted hex, dotted octal.
-   *
    * @param testDomain the string we're testing
-   *
    * @return Returns true if it's a valid ipv4 address
    */
   private boolean isValidIpv4(String testDomain) {
@@ -606,7 +594,6 @@ public class DomainNameReader {
   /**
    * Sees that there's an open "[", and is now checking for ":"'s and stopping when there is a ']' or invalid character.
    * Handles ipv4 formatted ipv6 addresses, zone indices, truncated notation.
-   *
    * @return Returns true if it is a valid ipv6 address
    */
   private boolean isValidIpv6(String testDomain) {
