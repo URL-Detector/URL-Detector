@@ -528,40 +528,15 @@ public class DomainNameReader {
     if (length > 0) {
       //handling format without dots. Ex: http://2123123123123/path/a, http://0x8242343/aksdjf
       if (_dots == 0) {
-        try {
-          long value;
-          if (length > 2 && testDomain.charAt(0) == '0' && testDomain.charAt(1) == 'x') { //hex
-            // digit must be within ['0', '9'] or ['A', 'F'] or ['a', 'f']
-            for (int c = 2; c < length; c++) {
-              char d = testDomain.charAt(c);
-              if ((d < '0' || (d > '9' && d < 'A') || (d > 'F' && d < 'a') || d > 'f')) {
-                return false;
-              }
-            }
-            value = Long.parseLong(testDomain.substring(2), 16);
-          } else if (testDomain.charAt(0) == '0') { //octal
-            // digit must be within ['0', '7']
-            for (int c = 1; c < length; c++) {
-              char d = testDomain.charAt(c);
-              if (d < '0' || d > '7') {
-                return false;
-              }
-            }
-            value = Long.parseLong(testDomain.substring(1), 8);
-          } else { //decimal
-            // digit must be within ['0', '9']
-            for (int c = 0; c < length; c++) {
-              char d = testDomain.charAt(c);
-              if (d < '0' || d > '9') {
-                return false;
-              }
-            }
-            value = Long.parseLong(testDomain);
-          }
-          valid = value <= MAX_NUMERIC_DOMAIN_VALUE && value >= MIN_NUMERIC_DOMAIN_VALUE;
-        } catch (NumberFormatException e) {
-          valid = false;
+        long value;
+        if (length > 2 && testDomain.charAt(0) == '0' && testDomain.charAt(1) == 'x') { //hex
+          value = parseLongSafe(testDomain, 2, 16, MAX_NUMERIC_DOMAIN_VALUE);
+        } else if (testDomain.charAt(0) == '0') { //octal
+          value = parseLongSafe(testDomain, 1, 8, MAX_NUMERIC_DOMAIN_VALUE);
+        } else { //decimal
+          value = parseLongSafe(testDomain, 0, 10, MAX_NUMERIC_DOMAIN_VALUE);
         }
+        valid = value <= MAX_NUMERIC_DOMAIN_VALUE && value >= MIN_NUMERIC_DOMAIN_VALUE;
       } else if (_dots == 3) {
         //Dotted decimal/hex/octal format
         String[] parts = CharUtils.splitByDot(testDomain);
@@ -572,50 +547,20 @@ public class DomainNameReader {
           String part = parts[i];
           int partLen = part.length();
           if (partLen > 0) {
-            String parsedNum;
+            int startIndex;
             int base;
             if (partLen > 2 && part.charAt(0) == '0' && part.charAt(1) == 'x') { //dotted hex
-              // digit must be within ['0', '9'] or ['A', 'F'] or ['a', 'f']
-              for (int c = 2; c < partLen; c++) {
-                char d = part.charAt(c);
-                if ((d < '0' || (d > '9' && d < 'A') || (d > 'F' && d < 'a') || d > 'f')) {
-                  return false;
-                }
-              }
-              parsedNum = part.substring(2);
+              startIndex = 2;
               base = 16;
             } else if (part.charAt(0) == '0') { //dotted octal
-              // digit must be within ['0', '7']
-              for (int c = 1; c < partLen; c++) {
-                char d = part.charAt(c);
-                if (d < '0' || d > '7') {
-                  return false;
-                }
-              }
-              parsedNum = part.substring(1);
+              startIndex = 1;
               base = 8;
             } else { //dotted decimal
-              // digit must be within ['0', '9']
-              for (int c = 0; c < partLen; c++) {
-                char d = part.charAt(c);
-                if (d < '0' || d > '9') {
-                  return false;
-                }
-              }
-              parsedNum = part;
+              startIndex = 0;
               base = 10;
             }
 
-            Integer section;
-            if (parsedNum.length() == 0) {
-              section = 0;
-            } else {
-              try {
-                section = Integer.parseInt(parsedNum, base);
-              } catch (NumberFormatException e) {
-                return false;
-              }
-            }
+            long section = parseLongSafe(part, startIndex, base, MAX_IP_PART);
             if (section < MIN_IP_PART || section > MAX_IP_PART) {
               valid = false;
             }
@@ -725,5 +670,23 @@ public class DomainNameReader {
     //numSections != 1 checks for things like: [adf]
     //If there are more than 8 sections for the address or there isn't a double colon, then it's invalid.
     return numSections != 1 && (numSections >= 8 || doubleColonFlag);
+  }
+
+  private static long parseLongSafe(String s, int startIndex, int base, long maxValue) {
+    if (startIndex >= s.length()) {
+      return 0;
+    }
+    long result = 0;
+    for (int i = startIndex; i < s.length(); i++) {
+      int digit = Character.digit(s.charAt(i), base);
+      if (digit < 0) {
+        return maxValue + 1;
+      }
+      result = result * base + digit;
+      if (result > maxValue) {
+        return maxValue + 1;
+      }
+    }
+    return result;
   }
 }
