@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -680,6 +681,24 @@ class TestUriDetection {
     String tmp = address.replace(".", "%2e");
     String validUrl = tmp.substring(0, tmp.length() - 1) + zoneIndex + ']';
     runTest(validUrl, UrlDetectorOptions.Default, validUrl);
+  }
+
+  @Test
+  public void testColonEmbededurl() {
+   runTest("::::::::::::::::::::::http://username:password@gmail.com:::::::::::::::",
+    UrlDetectorOptions.Default, "http://username:password@gmail.com");
+  }
+  
+  @Test
+  public void testNegativeArraySizeException() {
+    String rawtext = "How ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\\n\\nCome ";
+    List<Url> urls = null;
+    try {
+      UrlDetector detector = new UrlDetector(rawtext, UrlDetectorOptions.Default);
+      urls = detector.detect();
+    } catch (NegativeArraySizeException e ) {
+      Assertions.fail(e.getMessage());
+    }
   }
 
   @Test
