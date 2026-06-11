@@ -16,15 +16,12 @@ subprojects {
 
   plugins.withType(JavaPlugin).configureEach {
     java {
-      toolchain {
-        languageVersion = JavaLanguageVersion.of(8)
-      }
-
-      sourceCompatibility = JavaVersion.VERSION_1_8
-      targetCompatibility = JavaVersion.VERSION_1_8
-
       withSourcesJar()
       withJavadocJar()
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+      options.release = 8
     }
 
     dependencies {
