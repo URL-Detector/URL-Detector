@@ -1,6 +1,12 @@
+plugins {
+  id 'base'
+}
+
 subprojects {
   apply plugin: 'java'
   apply plugin: 'idea'
+  apply plugin: 'maven-publish'
+  apply plugin: 'signing'
 
   repositories {
     mavenCentral()
@@ -9,22 +15,84 @@ subprojects {
   project.layout.buildDirectory = project.rootProject.layout.buildDirectory.dir(project.name).get()
 
   plugins.withType(JavaPlugin).configureEach {
-      java {
-        toolchain {
-          languageVersion = JavaLanguageVersion.of(8)
+    java {
+      withSourcesJar()
+      withJavadocJar()
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+      options.release = 8
+    }
+
+    dependencies {
+      testImplementation platform('org.junit:junit-bom:5.14.4')
+      testImplementation 'org.junit.jupiter:junit-jupiter'
+      testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+      testImplementation 'org.hamcrest:hamcrest:3.0'
+    }
+
+    test {
+      useJUnitPlatform()
+    }
+
+    publishing {
+      publications {
+        mavenJava(MavenPublication) {
+          from components.java
+
+          groupId = 'io.github.url-detector'
+          artifactId = project.name
+          version = project.version
+
+          pom {
+            name = 'io.github.url-detector:url-detector'
+            description = 'A Java library to detect and normalize URLs in text'
+            url = 'https://github.com/URL-Detector/URL-Detector'
+
+            licenses {
+              license {
+                name = 'The Apache License, Version 2.0'
+                url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+              }
+            }
+
+            scm {
+              connection = 'scm:git:git://github.com/url-detector/URL-Detector.git'
+              developerConnection = 'scm:git:ssh://github.com/url-detector/URL-Detector.git'
+              url = 'https://github.com/url-detector/URL-Detector/tree/master'
+            }
+
+            developers {
+              developer {
+                id = 'pgalbraith'
+                name = 'Paul Galbraith'
+                email = 'paul@galbraiths.ca'
+              }
+            }
+          }
         }
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
       }
 
-      dependencies {
-        testImplementation platform('org.junit:junit-bom:5.14.4')
-        testImplementation 'org.junit.jupiter:junit-jupiter'
-        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-        testImplementation 'org.hamcrest:hamcrest:3.0'
-      }
-      test {
-        useJUnitPlatform()
+      repositories {
+        maven {
+          name = 'staging'
+          url = rootProject.layout.buildDirectory.dir('staging-deploy')
+        }
       }
     }
+  }
+
+  tasks.register('mavenCentralBundle', Zip) {
+    dependsOn tasks.named('publishAllPublicationsToStagingRepository')
+
+    archiveFileName = 'maven-central-bundle.zip'
+    destinationDirectory = rootProject.layout.buildDirectory.dir('distributions')
+
+    from(rootProject.layout.buildDirectory.dir('staging-deploy'))
+  }
+
+  signing {
+    useGpgCmd()
+    sign publishing.publications.mavenJava
+  }
 }
